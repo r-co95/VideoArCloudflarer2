@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Jorge & Astrid</title>
+
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #inicio {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10000;
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
+        url('./fondo.jpg');
+      background-size: cover;
+      background-position: center;
+      filter: brightness(1.5);
+    }
+
+    #contenedor-textos {
+      position: absolute;
+      bottom: 15vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    #inicio h1 {
+      color: #fff;
+      font-size: 32px;
+      margin: 0;
+      font-weight: 700;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    #btn-comenzar {
+      border: 0;
+      padding: 16px 40px;
+      background: #2563eb;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    #btn-comenzar:active {
+      transform: scale(0.97);
+    }
+
+    #btn-flash {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 4999;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    #video-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 5000;
+      display: none;
+      background: #000;
+    }
+
+    #video-pantalla {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #btn-cerrar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 5001;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="inicio">
+    <div id="contenedor-textos">
+      <h1>Jorge & Astrid</h1>
+      <button id="btn-comenzar">Comenzar Experiencia</button>
+    </div>
+  </div>
+
+  <button id="btn-flash">🔦</button>
+
+  <div id="video-container">
+    <button id="btn-cerrar">&times;</button>
+    <video
+      id="video-pantalla"
+      playsinline
+      webkit-playsinline
+      loop
+      preload="auto">
+    </video>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: yes;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false">
+    </a-camera>
+
+    <a-entity id="targets-group"></a-entity>
+
+  </a-scene>
+
+  <script>
+    const inicio = document.getElementById('inicio');
+    const container = document.getElementById('video-container');
+    const video = document.getElementById('video-pantalla');
+    const btnCerrar = document.getElementById('btn-cerrar');
+    const btnFlash = document.getElementById('btn-flash');
+    const targetsGroup = document.getElementById('targets-group');
+    const sceneEl = document.querySelector('a-scene');
+
+    let videoActual = null;
+    let flashEncendido = false;
+
+    async function buscarVideo(index) {
+      const nombreArchivo = `Cita${String(index + 1).padStart(3, '0')}.mp4`;
+      
+      // Enlace base de Cloudflare R2
+      const rutaBase = "https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/"; 
+      
+      const rutaCompleta = rutaBase + nombreArchivo;
+
+      try {
+        const respuesta = await fetch(rutaCompleta, {
+          method: 'HEAD',
+          cache: 'no-store'
+        });
+
+        if (respuesta.ok) {
+          console.log(`Video listo: ${rutaCompleta}`);
+          return rutaCompleta;
+        }
+      } catch (error) {
+        console.error('Error de conexión con R2:', error);
+      }
+
+      console.error(`No se encontró ${nombreArchivo}`);
+      return null;
+    }
+
+    for (let i = 0; i < 100; i++) {
+      const el = document.createElement('a-entity');
+      el.setAttribute('mindar-image-target', `targetIndex: ${i}`);
+
+      el.addEventListener('targetFound', async () => {
+        const rutaVideo = await buscarVideo(i);
+        if (!rutaVideo) return;
+
+        if (videoActual !== rutaVideo) {
+          video.src = rutaVideo;
+          videoActual = rutaVideo;
+          video.load();
+        }
+
+        video.muted = false;
+        container.style.display = 'block';
+        video.play().catch(e => console.log('Error play:', e));
+      });
+
+      el.addEventListener('targetLost', () => {
+        if (videoActual) {
+          video.pause();
+          container.style.display = 'none';
+        }
+      });
+      targetsGroup.appendChild(el);
+    }
+
+    document.getElementById('btn-comenzar').addEventListener('click', async () => {
+      inicio.style.display = 'none';
+      btnFlash.style.display = 'flex';
+      video.muted = false;
+      const mindarSystem = sceneEl.systems['mindar-image-system'];
+      await mindarSystem.start();
+    });
+
+    // Función de cierre blindada
+    function cerrarReproduccion(e) {
+      if(e) { e.preventDefault(); e.stopPropagation(); }
+      video.pause();
+      video.currentTime = 0;
+      videoActual = null;
+      container.style.display = 'none';
+    }
+
+    btnCerrar.addEventListener('click', cerrarReproduccion);
+    btnCerrar.addEventListener('touchend', cerrarReproduccion);
+
+    btnFlash.addEventListener('click', async () => {
+      try {
+        const videos = document.querySelectorAll('video');
+        let trackCamara = null;
+        videos.forEach(v => {
+          if (v.id !== 'video-pantalla' && v.srcObject) {
+            trackCamara = v.srcObject.getVideoTracks()[0];
+          }
+        });
+
+        if (trackCamara && trackCamara.getCapabilities().torch) {
+          flashEncendido = !flashEncendido;
+          await trackCamara.applyConstraints({ advanced: [{ torch: flashEncendido }] });
+          btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0, 0, 0, 0.7)';
+        }
+      } catch (err) {
+        console.log('Error flash:', err);
+      }
+    });
+  </script>
+</body>
+</html>
