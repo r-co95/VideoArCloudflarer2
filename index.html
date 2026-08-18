@@ -31,8 +31,6 @@
       overflow: hidden;
     }
 
-    /* El fondo vive en su propia capa para que el filtro de brillo
-       no lave los colores del texto ni del botón */
     #fondo-inicio {
       position: absolute;
       inset: 0;
@@ -275,13 +273,10 @@
   </div>
 
   <div id="instrucciones">Apunta la cámara hacia la foto 📸</div>
-
   <button id="btn-flash">🔦</button>
-
   <button id="btn-finalizar">Finalizar</button>
 
   <div id="loading-spinner"><div class="spinner"></div></div>
-
   <button id="btn-tap-play">▶ Toca para reproducir</button>
 
   <div id="video-container">
@@ -331,14 +326,7 @@
     let videoActual = null;
     let flashEncendido = false;
     let indiceActivo = null;
-
-    // Cambia este número para que coincida con la cantidad real de
-    // imágenes/fotos que compilaste dentro de targets.mind. Crear más
-    // entidades de las necesarias desperdicia recursos de tracking.
     const NUM_TARGETS = 10;
-
-    // Caché para no repetir el fetch HEAD cada vez que se reconoce
-    // el mismo marcador
     const cacheVideos = {};
 
     function mostrarSpinner() {
@@ -351,10 +339,7 @@
 
     async function buscarVideo(index) {
       const nombreArchivo = `Cita${String(index + 1).padStart(3, '0')}.mp4`;
-
-      // Enlace base de Cloudflare R2
       const rutaBase = "https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/";
-
       const rutaCompleta = rutaBase + nombreArchivo;
 
       try {
@@ -395,8 +380,6 @@
 
         const rutaVideo = await obtenerVideoConCache(i);
 
-        // Si mientras esperábamos la respuesta el usuario ya cambió
-        // de marcador, este resultado quedó desactualizado: se ignora
         if (indiceActivo !== i) return;
 
         if (!rutaVideo) {
@@ -414,7 +397,7 @@
         try {
           await video.play();
         } catch (e) {
-          console.log('Reproducción automática bloqueada, se requiere un toque:', e);
+          console.log('Reproducción bloqueada:', e);
           ocultarSpinner();
           container.style.display = 'block';
           btnTapPlay.style.display = 'flex';
@@ -422,8 +405,6 @@
       });
 
       el.addEventListener('targetLost', () => {
-        // Ignorar si este marcador ya no es el activo (evita pausar
-        // el video de un marcador distinto que se acaba de encontrar)
         if (indiceActivo !== i) return;
         indiceActivo = null;
 
@@ -438,9 +419,6 @@
       targetsGroup.appendChild(el);
     }
 
-    // Muestra el video/oculta el spinner solo cuando ya está
-    // realmente reproduciendo, y vuelve a mostrarlo si se pone
-    // en buffer
     video.addEventListener('playing', () => {
       ocultarSpinner();
       container.style.display = 'block';
@@ -466,8 +444,6 @@
       }
     });
 
-    // Envuelve cualquier promesa con un límite de tiempo, para que
-    // nada pueda dejar la app colgada indefinidamente
     function conTimeout(promise, ms) {
       const limite = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms)
@@ -479,10 +455,6 @@
       btnComenzar.disabled = true;
       btnComenzar.textContent = 'Iniciando cámara...';
 
-      // Desbloquear audio en iOS: reproducir (y pausar de inmediato)
-      // dentro del gesto del usuario. Sobre un <video> sin src esto
-      // a veces no resuelve ni rechaza en algunos navegadores, así
-      // que lo limitamos a 800ms y seguimos sin importar qué pase
       try {
         video.muted = false;
         await conTimeout(video.play(), 800);
@@ -494,10 +466,6 @@
 
       try {
         const mindarSystem = sceneEl.systems['mindar-image-system'];
-
-        // Salvavidas: si start() nunca resuelve ni rechaza (puede
-        // pasar si falta targets.mind o la página no está en HTTPS),
-        // no dejamos al usuario colgado en "Iniciando cámara..."
         await conTimeout(mindarSystem.start(), 15000);
 
         inicio.style.display = 'none';
@@ -519,7 +487,6 @@
       overlayError.style.display = 'none';
     });
 
-    // Función de cierre blindada
     function cerrarReproduccion(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       video.pause();
@@ -532,9 +499,9 @@
     btnCerrar.addEventListener('click', cerrarReproduccion);
     btnCerrar.addEventListener('touchend', cerrarReproduccion);
 
-    // Termina el escaneo por completo y regresa a la pantalla de inicio
+    // NUEVA FUNCIÓN FINALIZAR MEJORADA
     async function finalizarEscaneo() {
-      // Apagar el flash si estaba encendido
+      // 1. Apagar flash si está encendido
       if (flashEncendido) {
         try {
           const videos = document.querySelectorAll('video');
@@ -554,23 +521,39 @@
         btnFlash.style.background = 'rgba(0, 0, 0, 0.7)';
       }
 
-      // Detener el tracking y liberar la cámara
+      // 2. Detener el sistema MindAR
       try {
         const mindarSystem = sceneEl.systems['mindar-image-system'];
         if (mindarSystem && typeof mindarSystem.stop === 'function') {
           mindarSystem.stop();
         }
       } catch (e) {
-        console.log('Error al detener la cámara:', e);
+        console.log('Error al detener MindAR:', e);
       }
 
-      // Detener cualquier video en curso
-      video.pause();
-      video.currentTime = 0;
-      videoActual = null;
+      // 3. Forzar el cierre de los tracks de la cámara (Evita que quede encendida en segundo plano)
+      try {
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+          if (v.id !== 'video-pantalla' && v.srcObject) {
+            const tracks = v.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+            v.srcObject = null;
+          }
+        });
+      } catch (e) {
+        console.log('Error al liberar hardware de la cámara:', e);
+      }
+
+      // 4. Detener cualquier video en curso
+      if (videoActual) {
+        video.pause();
+        video.currentTime = 0;
+        videoActual = null;
+      }
       indiceActivo = null;
 
-      // Ocultar todo lo del modo escaneo
+      // 5. Ocultar todos los elementos de la interfaz de escaneo
       container.style.display = 'none';
       btnTapPlay.style.display = 'none';
       ocultarSpinner();
@@ -578,7 +561,7 @@
       btnFlash.style.display = 'none';
       btnFinalizar.style.display = 'none';
 
-      // Volver a la pantalla de inicio
+      // 6. Restaurar la pantalla de inicio
       btnComenzar.disabled = false;
       btnComenzar.textContent = 'Comenzar Experiencia';
       inicio.style.display = 'block';
@@ -607,4 +590,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
