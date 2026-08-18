@@ -21,12 +21,21 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* ---------- Pantalla de inicio ---------- */
     #inicio {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
       z-index: 10000;
+      overflow: hidden;
+    }
+
+    /* El fondo vive en su propia capa para que el filtro de brillo
+       no lave los colores del texto ni del botón */
+    #fondo-inicio {
+      position: absolute;
+      inset: 0;
       background:
         linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
         url('./fondo.jpg');
@@ -70,6 +79,64 @@
       transform: scale(0.97);
     }
 
+    #btn-comenzar:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    /* ---------- Overlay de error de cámara ---------- */
+    #overlay-error {
+      position: fixed;
+      inset: 0;
+      z-index: 10001;
+      background: rgba(0, 0, 0, 0.88);
+      color: #fff;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      gap: 20px;
+    }
+
+    #overlay-error p {
+      font-size: 16px;
+      line-height: 1.5;
+      max-width: 320px;
+      margin: 0;
+    }
+
+    #overlay-error button {
+      border: 0;
+      padding: 12px 28px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* ---------- Banner de instrucciones ---------- */
+    #instrucciones {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4998;
+      background: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+      text-align: center;
+      max-width: 85vw;
+    }
+
+    /* ---------- Botón de flash ---------- */
     #btn-flash {
       position: fixed;
       top: 20px;
@@ -89,6 +156,31 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
+    /* ---------- Spinner de carga ---------- */
+    #loading-spinner {
+      position: fixed;
+      inset: 0;
+      z-index: 5002;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    #loading-spinner .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: girar 0.8s linear infinite;
+    }
+
+    @keyframes girar {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ---------- Reproductor de video ---------- */
     #video-container {
       position: fixed;
       inset: 0;
@@ -128,13 +220,23 @@
 <body>
 
   <div id="inicio">
+    <div id="fondo-inicio"></div>
     <div id="contenedor-textos">
       <h1>Jorge & Astrid</h1>
       <button id="btn-comenzar">Comenzar Experiencia</button>
     </div>
   </div>
 
+  <div id="overlay-error">
+    <p id="mensaje-error">No pudimos acceder a la cámara. Revisa los permisos del navegador e inténtalo de nuevo.</p>
+    <button id="btn-reintentar">Reintentar</button>
+  </div>
+
+  <div id="instrucciones">Apunta la cámara hacia la foto 📸</div>
+
   <button id="btn-flash">🔦</button>
+
+  <div id="loading-spinner"><div class="spinner"></div></div>
 
   <div id="video-container">
     <button id="btn-cerrar">&times;</button>
@@ -171,16 +273,39 @@
     const btnFlash = document.getElementById('btn-flash');
     const targetsGroup = document.getElementById('targets-group');
     const sceneEl = document.querySelector('a-scene');
+    const btnComenzar = document.getElementById('btn-comenzar');
+    const overlayError = document.getElementById('overlay-error');
+    const mensajeError = document.getElementById('mensaje-error');
+    const btnReintentar = document.getElementById('btn-reintentar');
+    const instrucciones = document.getElementById('instrucciones');
+    const loadingSpinner = document.getElementById('loading-spinner');
 
     let videoActual = null;
     let flashEncendido = false;
 
+    // Cambia este número para que coincida con la cantidad real de
+    // imágenes/fotos que compilaste dentro de targets.mind. Crear más
+    // entidades de las necesarias desperdicia recursos de tracking.
+    const NUM_TARGETS = 10;
+
+    // Caché para no repetir el fetch HEAD cada vez que se reconoce
+    // el mismo marcador
+    const cacheVideos = {};
+
+    function mostrarSpinner() {
+      loadingSpinner.style.display = 'flex';
+    }
+
+    function ocultarSpinner() {
+      loadingSpinner.style.display = 'none';
+    }
+
     async function buscarVideo(index) {
       const nombreArchivo = `Cita${String(index + 1).padStart(3, '0')}.mp4`;
-      
+
       // Enlace base de Cloudflare R2
-      const rutaBase = "https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/"; 
-      
+      const rutaBase = "https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/";
+
       const rutaCompleta = rutaBase + nombreArchivo;
 
       try {
@@ -201,13 +326,28 @@
       return null;
     }
 
-    for (let i = 0; i < 100; i++) {
+    async function obtenerVideoConCache(index) {
+      if (cacheVideos[index] !== undefined) {
+        return cacheVideos[index];
+      }
+      const url = await buscarVideo(index);
+      cacheVideos[index] = url;
+      return url;
+    }
+
+    for (let i = 0; i < NUM_TARGETS; i++) {
       const el = document.createElement('a-entity');
       el.setAttribute('mindar-image-target', `targetIndex: ${i}`);
 
       el.addEventListener('targetFound', async () => {
-        const rutaVideo = await buscarVideo(i);
-        if (!rutaVideo) return;
+        instrucciones.style.display = 'none';
+        mostrarSpinner();
+
+        const rutaVideo = await obtenerVideoConCache(i);
+        if (!rutaVideo) {
+          ocultarSpinner();
+          return;
+        }
 
         if (videoActual !== rutaVideo) {
           video.src = rutaVideo;
@@ -216,8 +356,12 @@
         }
 
         video.muted = false;
-        container.style.display = 'block';
-        video.play().catch(e => console.log('Error play:', e));
+        try {
+          await video.play();
+        } catch (e) {
+          console.log('Error al reproducir:', e);
+          ocultarSpinner();
+        }
       });
 
       el.addEventListener('targetLost', () => {
@@ -225,21 +369,71 @@
           video.pause();
           container.style.display = 'none';
         }
+        ocultarSpinner();
+        instrucciones.style.display = 'flex';
       });
       targetsGroup.appendChild(el);
     }
 
-    document.getElementById('btn-comenzar').addEventListener('click', async () => {
-      inicio.style.display = 'none';
-      btnFlash.style.display = 'flex';
-      video.muted = false;
-      const mindarSystem = sceneEl.systems['mindar-image-system'];
-      await mindarSystem.start();
+    // Muestra el video/oculta el spinner solo cuando ya está
+    // realmente reproduciendo, y vuelve a mostrarlo si se pone
+    // en buffer
+    video.addEventListener('playing', () => {
+      ocultarSpinner();
+      container.style.display = 'block';
+    });
+
+    video.addEventListener('waiting', () => {
+      mostrarSpinner();
+    });
+
+    video.addEventListener('error', () => {
+      console.error('Error al cargar el video:', video.error);
+      ocultarSpinner();
+      container.style.display = 'none';
+    });
+
+    async function iniciarExperiencia() {
+      btnComenzar.disabled = true;
+      btnComenzar.textContent = 'Iniciando cámara...';
+
+      // Desbloquear audio en iOS: hay que reproducir (y pausar de
+      // inmediato) dentro del gesto del usuario, si no el primer
+      // video puede sonar mudo
+      try {
+        video.muted = false;
+        await video.play();
+        video.pause();
+        video.currentTime = 0;
+      } catch (e) {
+        console.log('No se pudo desbloquear audio:', e);
+      }
+
+      try {
+        const mindarSystem = sceneEl.systems['mindar-image-system'];
+        await mindarSystem.start();
+
+        inicio.style.display = 'none';
+        btnFlash.style.display = 'flex';
+        instrucciones.style.display = 'flex';
+      } catch (err) {
+        console.error('Error al iniciar la cámara:', err);
+        mensajeError.textContent = 'No pudimos acceder a la cámara. Revisa los permisos del navegador e inténtalo de nuevo.';
+        overlayError.style.display = 'flex';
+        btnComenzar.disabled = false;
+        btnComenzar.textContent = 'Comenzar Experiencia';
+      }
+    }
+
+    btnComenzar.addEventListener('click', iniciarExperiencia);
+
+    btnReintentar.addEventListener('click', () => {
+      overlayError.style.display = 'none';
     });
 
     // Función de cierre blindada
     function cerrarReproduccion(e) {
-      if(e) { e.preventDefault(); e.stopPropagation(); }
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       video.pause();
       video.currentTime = 0;
       videoActual = null;
