@@ -38,7 +38,9 @@
         sans-serif;
     }
 
-    /* ---------- Pantalla de inicio ---------- */
+    /* =========================================================
+       PANTALLA DE INICIO
+       ========================================================= */
 
     #inicio {
       position: fixed;
@@ -111,10 +113,14 @@
       transform: scale(0.97);
     }
 
-    /* ---------- UI de Cámara ---------- */
+
+    /* =========================================================
+       UI DE CÁMARA
+       ========================================================= */
 
     #instrucciones {
       position: fixed;
+
       top: 30px;
       left: 50%;
 
@@ -135,8 +141,14 @@
       display: none;
 
       text-align: center;
+
       max-width: 85vw;
     }
+
+
+    /* =========================================================
+       LINTERNA
+       ========================================================= */
 
     #btn-flash {
       position: fixed;
@@ -172,6 +184,11 @@
         background 0.2s;
     }
 
+
+    /* =========================================================
+       FINALIZAR
+       ========================================================= */
+
     #btn-finalizar {
       position: fixed;
 
@@ -202,7 +219,10 @@
         0 4px 12px rgba(0,0,0,0.4);
     }
 
-    /* ---------- Spinner ---------- */
+
+    /* =========================================================
+       SPINNER
+       ========================================================= */
 
     #loading-spinner {
       position: fixed;
@@ -240,7 +260,10 @@
       }
     }
 
-    /* ---------- Video ---------- */
+
+    /* =========================================================
+       VIDEO
+       ========================================================= */
 
     #video-container {
       position: fixed;
@@ -263,6 +286,11 @@
 
       object-fit: cover;
     }
+
+
+    /* =========================================================
+       CERRAR VIDEO
+       ========================================================= */
 
     #btn-cerrar {
       position: absolute;
@@ -291,9 +319,10 @@
 
 <body>
 
-  <!-- ======================================================
+
+  <!-- =======================================================
        PANTALLA INICIAL
-       ====================================================== -->
+       ======================================================= -->
 
   <div id="inicio">
 
@@ -312,9 +341,9 @@
   </div>
 
 
-  <!-- ======================================================
-       CONTROLES
-       ====================================================== -->
+  <!-- =======================================================
+       CONTROLES DE CÁMARA
+       ======================================================= -->
 
   <div id="instrucciones">
     Apunta la cámara hacia la foto 📸
@@ -329,18 +358,18 @@
   </button>
 
 
-  <!-- ======================================================
+  <!-- =======================================================
        SPINNER
-       ====================================================== -->
+       ======================================================= -->
 
   <div id="loading-spinner">
     <div class="spinner"></div>
   </div>
 
 
-  <!-- ======================================================
-       VIDEO
-       ====================================================== -->
+  <!-- =======================================================
+       ÚNICO REPRODUCTOR DE VIDEO
+       ======================================================= -->
 
   <div id="video-container">
 
@@ -358,9 +387,9 @@
   </div>
 
 
-  <!-- ======================================================
+  <!-- =======================================================
        MINDAR
-       ====================================================== -->
+       ======================================================= -->
 
   <a-scene
     mindar-image="
@@ -387,9 +416,9 @@
 
   <script>
 
-    /* ======================================================
+    /* =========================================================
        ELEMENTOS
-       ====================================================== */
+       ========================================================= */
 
     const inicio =
       document.getElementById('inicio');
@@ -422,30 +451,24 @@
       document.getElementById('loading-spinner');
 
 
-    /* ======================================================
-       CONFIGURACIÓN DE LAS CITAS
-       ======================================================
+    /* =========================================================
+       CITAS ACTIVAS
+       =========================================================
 
-       Actualmente tiene 2 targets.
+       Actualmente:
 
-       TARGET 0 = Cita001.mp4
-       TARGET 1 = Cita002.mp4
+       TARGET 0 → Cita001.mp4
+       TARGET 1 → Cita002.mp4
 
-       Para agregar la tercera:
+       Cuando agregue la Cita 003:
 
        { target: 2 }
 
-       Para la cuarta:
-
-       { target: 3 }
-
-       ...
-
-       Para la Cita 100:
+       Cita 100:
 
        { target: 99 }
 
-       ====================================================== */
+       ========================================================= */
 
     const CITAS = [
       { target: 0 },
@@ -459,9 +482,9 @@
     ];
 
 
-    /* ======================================================
+    /* =========================================================
        CONFIGURACIÓN
-       ====================================================== */
+       ========================================================= */
 
     const TOTAL_CITAS_MAXIMO = 100;
 
@@ -469,13 +492,13 @@
       'https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/';
 
 
-    /* ======================================================
+    /* =========================================================
        ESTADO
-       ====================================================== */
-
-    let flashEncendido = false;
+       ========================================================= */
 
     let experienciaActiva = false;
+
+    let flashEncendido = false;
 
     /*
      * Target que actualmente está siendo reconocido.
@@ -483,62 +506,59 @@
     let targetActivo = -1;
 
     /*
-     * Video que actualmente está cargado.
+     * Target cuyo video está cargado en
+     * el único elemento <video>.
      */
     let videoTargetActual = -1;
 
     /*
-     * Sirve para invalidar reproducciones anteriores
-     * cuando realmente cambiamos de target o finalizamos.
+     * Controla eventos antiguos.
      */
     let generacionVideo = 0;
 
-
     /*
-     * Guarda la posición de cada cita.
-
-     * Ejemplo:
-
-     * posicionesVideo[0] = 17.43
-     * posicionesVideo[1] = 52.12
-     *
-     * Esto permite que cada cita conserve
-     * su propio punto de reproducción.
+     * Cuando X resetea el escaneo,
+     * evitamos aceptar eventos antiguos.
      */
+    let reiniciandoEscaneo = false;
+
+
+    /* =========================================================
+       POSICIONES DE LOS VIDEOS
+       =========================================================
+
+       SOLO se crean entradas para las citas
+       que realmente haya visto el usuario.
+
+       Ejemplo:
+
+       posicionesVideo[0] = 35.4
+       posicionesVideo[1] = 82.7
+
+       Las otras 98 no existen.
+
+       ========================================================= */
+
     const posicionesVideo = {};
 
 
-    /*
-     * Indica qué citas ya fueron cargadas.
-     *
-     * No necesitamos cargar los 100 videos.
-     */
-    const videosCargados = {};
-
-
-    /* ======================================================
+    /* =========================================================
        SPINNER
-       ====================================================== */
+       ========================================================= */
 
     function mostrarSpinner() {
-
-      loadingSpinner.style.display =
-        'flex';
-
+      loadingSpinner.style.display = 'flex';
     }
 
 
     function ocultarSpinner() {
-
-      loadingSpinner.style.display =
-        'none';
-
+      loadingSpinner.style.display = 'none';
     }
 
 
-    /* ======================================================
+    /* =========================================================
        OBTENER TRACK DE CÁMARA
-       ====================================================== */
+       ========================================================= */
 
     function obtenerTrackCamara() {
 
@@ -560,8 +580,7 @@
       }
 
       const tracks =
-        videoMindAR.srcObject
-          .getVideoTracks();
+        videoMindAR.srcObject.getVideoTracks();
 
       if (
         !tracks ||
@@ -574,9 +593,9 @@
     }
 
 
-    /* ======================================================
+    /* =========================================================
        LINTERNA
-       ====================================================== */
+       ========================================================= */
 
     btnFlash.addEventListener(
       'click',
@@ -627,7 +646,6 @@
               ? '#facc15'
               : 'rgba(0, 0, 0, 0.7)';
 
-
         } catch (err) {
 
           console.error(
@@ -636,14 +654,13 @@
           );
 
         }
-
       }
     );
 
 
-    /* ======================================================
+    /* =========================================================
        APAGAR LINTERNA
-       ====================================================== */
+       ========================================================= */
 
     async function apagarLinterna() {
 
@@ -651,10 +668,8 @@
         return;
       }
 
-
       const track =
         obtenerTrackCamara();
-
 
       try {
 
@@ -680,7 +695,6 @@
             });
 
           }
-
         }
 
       } catch (err) {
@@ -693,78 +707,215 @@
       }
 
 
-      flashEncendido =
-        false;
-
+      flashEncendido = false;
 
       btnFlash.style.background =
         'rgba(0, 0, 0, 0.7)';
-
     }
 
 
-    /* ======================================================
-       PAUSAR Y OCULTAR VIDEO
-       ======================================================
+    /* =========================================================
+       GUARDAR POSICIÓN ACTUAL
+       ========================================================= */
 
-       IMPORTANTE:
+    function guardarPosicionActual() {
 
-       Esta función NO elimina:
+      if (
+        videoTargetActual >= 0 &&
+        isFinite(video.currentTime)
+      ) {
 
-       - src
-       - currentTime
-       - video cargado
+        posicionesVideo[
+          videoTargetActual
+        ] = video.currentTime;
 
-       Por eso al volver a detectar la imagen
-       el video puede continuar.
+      }
+    }
 
-       ====================================================== */
 
-    function pausarYOcultarVideo() {
+    /* =========================================================
+       PAUSAR VIDEO SIN DESTRUIRLO
+       ========================================================= */
+
+    function pausarVideo() {
+
+      guardarPosicionActual();
 
       try {
-
-        /*
-         * Guardamos la posición actual
-         * antes de pausar.
-         */
-
-        if (
-          videoTargetActual >= 0 &&
-          !isNaN(video.currentTime)
-        ) {
-
-          posicionesVideo[
-            videoTargetActual
-          ] = video.currentTime;
-
-        }
-
-
         video.pause();
+      } catch (e) {}
 
+      container.style.display = 'none';
+
+      ocultarSpinner();
+    }
+
+
+    /* =========================================================
+       OBTENER RUTA
+       ========================================================= */
+
+    function obtenerRutaVideo(targetIndex) {
+
+      const numeroCita =
+        targetIndex + 1;
+
+      const numeroFormateado =
+        String(numeroCita).padStart(3, '0');
+
+      return (
+        BASE_VIDEO +
+        `Cita${numeroFormateado}.mp4`
+      );
+    }
+
+
+    /* =========================================================
+       REPRODUCIR CITA
+       ========================================================= */
+
+    async function reproducirCita(targetIndex) {
+
+      const rutaVideo =
+        obtenerRutaVideo(targetIndex);
+
+
+      /*
+       * Si ya tenemos exactamente ese video,
+       * simplemente continuamos.
+       */
+
+      if (
+        videoTargetActual === targetIndex &&
+        video.src === rutaVideo
+      ) {
+
+        try {
+          await video.play();
+        } catch (e) {}
+
+        return;
+      }
+
+
+      /*
+       * Guardar la posición de la cita anterior.
+       */
+
+      guardarPosicionActual();
+
+
+      /*
+       * Pausar el video actual.
+       */
+
+      try {
+        video.pause();
       } catch (e) {}
 
 
-      container.style.display =
-        'none';
+      /*
+       * Cambiar el target actual.
+       */
+
+      videoTargetActual =
+        targetIndex;
 
 
-      ocultarSpinner();
+      /*
+       * Cargar solamente el nuevo video.
+       */
 
+      video.src =
+        rutaVideo;
+
+
+      /*
+       * Recuperar posición anterior
+       * si esta cita ya había sido vista.
+       */
+
+      const posicion =
+        posicionesVideo[targetIndex];
+
+
+      if (
+        typeof posicion === 'number' &&
+        isFinite(posicion)
+      ) {
+
+        /*
+         * Esperar metadata si todavía no está lista.
+         */
+
+        if (video.readyState >= 1) {
+
+          try {
+            video.currentTime = posicion;
+          } catch (e) {}
+
+        } else {
+
+          await new Promise(
+            resolve => {
+
+              const colocarPosicion =
+                () => {
+
+                  try {
+                    video.currentTime =
+                      posicion;
+                  } catch (e) {}
+
+                  resolve();
+                };
+
+
+              video.addEventListener(
+                'loadedmetadata',
+                colocarPosicion,
+                {
+                  once: true
+                }
+              );
+
+            }
+          );
+        }
+
+      } else {
+
+        try {
+          video.currentTime = 0;
+        } catch (e) {}
+
+      }
+
+
+      /*
+       * Reproducir.
+       */
+
+      try {
+
+        await video.play();
+
+      } catch (err) {
+
+        console.warn(
+          'No se pudo reproducir el video:',
+          err
+        );
+
+      }
     }
 
 
-    /* ======================================================
-       REINICIAR COMPLETAMENTE EL VIDEO
-       ======================================================
+    /* =========================================================
+       REINICIAR VIDEO COMPLETAMENTE
+       ========================================================= */
 
-       Esta función SOLO se utiliza cuando realmente
-       queremos cambiar de video o finalizar.
-
-       ====================================================== */
-
-    function limpiarVideoCompleto() {
+    function reiniciarVideoCompleto() {
 
       try {
         video.pause();
@@ -788,314 +939,160 @@
 
 
       ocultarSpinner();
-
     }
 
 
-    /* ======================================================
-       RUTA DEL VIDEO
-       ====================================================== */
+    /* =========================================================
+       RESET DEL ESCANEO — BOTÓN X
+       =========================================================
 
-    function obtenerRutaVideo(numeroCita) {
+       X NO finaliza la experiencia.
 
-      const numero =
-        String(numeroCita)
-          .padStart(3, '0');
+       X:
+       - guarda la posición;
+       - pausa;
+       - limpia el reproductor;
+       - elimina el target activo;
+       - reinicia MindAR;
+       - vuelve a esperar una nueva imagen.
 
+       ========================================================= */
 
-      return (
-        BASE_VIDEO +
-        `Cita${numero}.mp4`
-      );
+    async function resetearEscaneo() {
 
-    }
-
-
-    /* ======================================================
-       CARGAR / CONTINUAR VIDEO
-       ====================================================== */
-
-    async function reproducirCita(
-      targetIndex
-    ) {
-
-      const numeroCita =
-        targetIndex + 1;
-
-
-      const rutaVideo =
-        obtenerRutaVideo(
-          numeroCita
-        );
-
-
-      /*
-       * Si ya estamos reproduciendo
-       * exactamente este target,
-       * no hacemos nada.
-       */
-
-      if (
-        videoTargetActual === targetIndex &&
-        video.src === rutaVideo
-      ) {
-
-        try {
-          await video.play();
-        } catch (e) {}
-
+      if (!experienciaActiva) {
         return;
       }
 
 
-      /*
-       * Si veníamos de otro target,
-       * guardamos la posición del anterior.
-       */
-
-      if (
-        videoTargetActual >= 0 &&
-        !isNaN(video.currentTime)
-      ) {
-
-        posicionesVideo[
-          videoTargetActual
-        ] = video.currentTime;
-
+      if (reiniciandoEscaneo) {
+        return;
       }
 
 
+      reiniciandoEscaneo = true;
+
+
+      generacionVideo++;
+
+
       /*
-       * Pausamos el video anterior,
-       * pero solo ahora que realmente
-       * vamos a cambiar a otro video.
+       * Guardar posición antes de limpiar.
+       */
+
+      guardarPosicionActual();
+
+
+      /*
+       * Detener y limpiar el único reproductor.
+       *
+       * La posición queda guardada en
+       * posicionesVideo[target].
+       */
+
+      reiniciarVideoCompleto();
+
+
+      /*
+       * El target actual deja de estar activo.
+       */
+
+      targetActivo = -1;
+
+
+      /*
+       * Mostrar nuevamente la instrucción.
+       */
+
+      instrucciones.style.display =
+        'flex';
+
+
+      /*
+       * Reiniciar MindAR para obligar
+       * a comenzar un nuevo ciclo de escaneo.
        */
 
       try {
-        video.pause();
-      } catch (e) {}
+
+        const mindarSystem =
+          sceneEl.systems[
+            'mindar-image-system'
+          ];
 
 
-      videoTargetActual =
-        targetIndex;
+        if (
+          mindarSystem &&
+          typeof mindarSystem.stop === 'function'
+        ) {
 
-
-      /*
-       * Cargamos el nuevo video.
-       */
-
-      video.src =
-        rutaVideo;
-
-
-      /*
-       * Si ya habíamos visto esta cita,
-       * recuperamos su posición.
-       *
-       * Si es la primera vez,
-       * comienza desde 0.
-       */
-
-      const posicionGuardada =
-        posicionesVideo[targetIndex];
-
-
-      if (
-        typeof posicionGuardada === 'number' &&
-        isFinite(posicionGuardada)
-      ) {
-
-        /*
-         * Esperamos a que el metadata
-         * esté disponible antes de colocar
-         * currentTime.
-         */
-
-        if (video.readyState >= 1) {
-
-          try {
-            video.currentTime =
-              posicionGuardada;
-          } catch (e) {}
-
-        } else {
-
-          await new Promise(
-            (resolve) => {
-
-              const colocarPosicion =
-                () => {
-
-                  try {
-                    video.currentTime =
-                      posicionGuardada;
-                  } catch (e) {}
-
-                  video.removeEventListener(
-                    'loadedmetadata',
-                    colocarPosicion
-                  );
-
-                  resolve();
-
-                };
-
-              video.addEventListener(
-                'loadedmetadata',
-                colocarPosicion,
-                { once: true }
-              );
-
-            }
-          );
+          mindarSystem.stop();
 
         }
 
-      } else {
 
-        try {
-          video.currentTime = 0;
-        } catch (e) {}
+        /*
+         * Pequeña espera para asegurar
+         * que MindAR haya terminado el ciclo
+         * anterior antes de arrancar nuevamente.
+         */
 
-      }
-
-
-      /*
-       * Guardamos que este video ya
-       * fue solicitado.
-       */
-
-      videosCargados[targetIndex] =
-        true;
+        await new Promise(
+          resolve => setTimeout(resolve, 150)
+        );
 
 
-      /*
-       * Reproducimos.
-       */
+        if (
+          experienciaActiva &&
+          mindarSystem &&
+          typeof mindarSystem.start === 'function'
+        ) {
 
-      try {
+          await mindarSystem.start();
 
-        await video.play();
+        }
 
       } catch (err) {
 
         console.warn(
-          'No se pudo reproducir el video:',
+          'No se pudo reiniciar el escaneo:',
           err
         );
 
       }
 
+
+      /*
+       * La experiencia sigue activa.
+       */
+
+      reiniciandoEscaneo = false;
+
     }
 
 
-    /* ======================================================
-       FINALIZAR EXPERIENCIA
-       ====================================================== */
+    /* =========================================================
+       BOTÓN X
+       ========================================================= */
 
-    btnFinalizar.addEventListener(
-      'click',
-      async () => {
+    document
+      .getElementById('btn-cerrar')
+      .addEventListener(
+        'click',
+        async () => {
 
-        experienciaActiva =
-          false;
-
-        targetActivo =
-          -1;
-
-        generacionVideo++;
-
-
-        /*
-         * Al finalizar sí reiniciamos
-         * completamente el video.
-         */
-
-        limpiarVideoCompleto();
-
-
-        /*
-         * Reiniciamos posiciones.
-         *
-         * Si vuelve a comenzar la experiencia,
-         * los videos comenzarán desde 0.
-         */
-
-        Object.keys(
-          posicionesVideo
-        ).forEach(
-          key => delete posicionesVideo[key]
-        );
-
-
-        Object.keys(
-          videosCargados
-        ).forEach(
-          key => delete videosCargados[key]
-        );
-
-
-        await apagarLinterna();
-
-
-        btnFlash.style.display =
-          'none';
-
-        btnFinalizar.style.display =
-          'none';
-
-        instrucciones.style.display =
-          'none';
-
-
-        inicio.style.display =
-          'flex';
-
-
-        btnComenzar.disabled =
-          false;
-
-
-        /*
-         * Detener MindAR.
-         */
-
-        try {
-
-          const mindarSystem =
-            sceneEl.systems[
-              'mindar-image-system'
-            ];
-
-
-          if (
-            mindarSystem &&
-            typeof mindarSystem.stop === 'function'
-          ) {
-
-            mindarSystem.stop();
-
-          }
-
-        } catch (err) {
-
-          console.warn(
-            'No se pudo detener MindAR:',
-            err
-          );
+          await resetearEscaneo();
 
         }
-
-      }
-    );
+      );
 
 
-    /* ======================================================
-       CREAR TARGETS
-       ====================================================== */
+    /* =========================================================
+       TARGETS
+       ========================================================= */
 
     CITAS.forEach(
-      (cita) => {
+      cita => {
 
         /*
          * Validación.
@@ -1128,15 +1125,18 @@
         );
 
 
-        /* ==================================================
+        /* =====================================================
            TARGET ENCONTRADO
-           ================================================== */
+           ===================================================== */
 
         el.addEventListener(
           'targetFound',
           async () => {
 
-            if (!experienciaActiva) {
+            if (
+              !experienciaActiva ||
+              reiniciandoEscaneo
+            ) {
               return;
             }
 
@@ -1157,10 +1157,8 @@
 
 
             /*
-             * Reproducir la cita.
-             *
-             * Si ya había sido vista,
-             * continúa desde su posición.
+             * Cargar/reanudar solamente
+             * este video.
              */
 
             await reproducirCita(
@@ -1169,8 +1167,8 @@
 
 
             /*
-             * Verificamos que todavía
-             * corresponda al target actual.
+             * Verificar que todavía
+             * sea el target correcto.
              */
 
             if (
@@ -1180,26 +1178,23 @@
             ) {
 
               return;
-
             }
 
           }
         );
 
 
-        /* ==================================================
+        /* =====================================================
            TARGET PERDIDO
-           ================================================== */
+           ===================================================== */
 
         el.addEventListener(
           'targetLost',
           () => {
 
             /*
-             * MUY IMPORTANTE:
-             *
-             * Solo actuamos si este era
-             * realmente el target activo.
+             * Si ya estamos mostrando
+             * otro target, ignoramos este evento.
              */
 
             if (
@@ -1207,7 +1202,6 @@
             ) {
 
               return;
-
             }
 
 
@@ -1219,18 +1213,15 @@
 
 
             /*
-             * SOLO PAUSAMOS Y OCULTAMOS.
+             * IMPORTANTE:
              *
-             * NO:
-             * - borramos src
-             * - hacemos load()
-             * - ponemos currentTime = 0
+             * SOLO PAUSAMOS.
              *
-             * Esto permite continuar el video
-             * exactamente donde quedó.
+             * No borramos la posición.
+             * No eliminamos la referencia.
              */
 
-            pausarYOcultarVideo();
+            pausarVideo();
 
 
             if (experienciaActiva) {
@@ -1244,17 +1235,15 @@
         );
 
 
-        targetsGroup.appendChild(
-          el
-        );
+        targetsGroup.appendChild(el);
 
       }
     );
 
 
-    /* ======================================================
-       VIDEO COMENZÓ A REPRODUCIR
-       ====================================================== */
+    /* =========================================================
+       VIDEO REPRODUCIÉNDOSE
+       ========================================================= */
 
     video.addEventListener(
       'playing',
@@ -1275,39 +1264,23 @@
     );
 
 
-    /* ======================================================
-       ACTUALIZAR POSICIÓN
-       ======================================================
-
-       Guardamos continuamente la posición
-       para que incluso si se pierde el target
-       de forma abrupta, tengamos la última
-       posición conocida.
-
-       ====================================================== */
+    /* =========================================================
+       GUARDAR POSICIÓN CONTINUAMENTE
+       ========================================================= */
 
     video.addEventListener(
       'timeupdate',
       () => {
 
-        if (
-          videoTargetActual >= 0 &&
-          !isNaN(video.currentTime)
-        ) {
-
-          posicionesVideo[
-            videoTargetActual
-          ] = video.currentTime;
-
-        }
+        guardarPosicionActual();
 
       }
     );
 
 
-    /* ======================================================
-       ERROR DE VIDEO
-       ====================================================== */
+    /* =========================================================
+       ERROR VIDEO
+       ========================================================= */
 
     video.addEventListener(
       'error',
@@ -1325,9 +1298,9 @@
     );
 
 
-    /* ======================================================
-       COMENZAR EXPERIENCIA
-       ====================================================== */
+    /* =========================================================
+       COMENZAR
+       ========================================================= */
 
     btnComenzar.addEventListener(
       'click',
@@ -1364,6 +1337,10 @@
 
 
           targetActivo =
+            -1;
+
+
+          videoTargetActual =
             -1;
 
 
@@ -1416,80 +1393,126 @@
     );
 
 
-    /* ======================================================
-       CERRAR VIDEO
-       ======================================================
+    /* =========================================================
+       FINALIZAR
+       =========================================================
 
-       El botón X NO reinicia la cita.
+       A diferencia de X:
 
-       Conserva currentTime y src para que,
-       si vuelve a escanear el target,
-       continúe desde donde estaba.
+       FINALIZAR sí elimina todas las posiciones
+       y devuelve la experiencia a cero.
 
-       ====================================================== */
+       ========================================================= */
 
-    document
-      .getElementById('btn-cerrar')
-      .addEventListener(
-        'click',
-        () => {
+    btnFinalizar.addEventListener(
+      'click',
+      async () => {
 
-          generacionVideo++;
+        experienciaActiva =
+          false;
 
 
-          /*
-           * Guardar posición.
-           */
+        reiniciandoEscaneo =
+          false;
+
+
+        targetActivo =
+          -1;
+
+
+        generacionVideo++;
+
+
+        /*
+         * Detener video.
+         */
+
+        reiniciarVideoCompleto();
+
+
+        /*
+         * Borrar posiciones de las citas.
+         */
+
+        Object.keys(
+          posicionesVideo
+        ).forEach(
+          key => {
+            delete posicionesVideo[key];
+          }
+        );
+
+
+        /*
+         * Apagar linterna.
+         */
+
+        await apagarLinterna();
+
+
+        /*
+         * Ocultar controles.
+         */
+
+        btnFlash.style.display =
+          'none';
+
+        btnFinalizar.style.display =
+          'none';
+
+        instrucciones.style.display =
+          'none';
+
+
+        /*
+         * Volver al inicio.
+         */
+
+        inicio.style.display =
+          'flex';
+
+
+        btnComenzar.disabled =
+          false;
+
+
+        /*
+         * Detener MindAR.
+         */
+
+        try {
+
+          const mindarSystem =
+            sceneEl.systems[
+              'mindar-image-system'
+            ];
+
 
           if (
-            videoTargetActual >= 0 &&
-            !isNaN(video.currentTime)
+            mindarSystem &&
+            typeof mindarSystem.stop === 'function'
           ) {
 
-            posicionesVideo[
-              videoTargetActual
-            ] = video.currentTime;
+            mindarSystem.stop();
 
           }
 
+        } catch (err) {
 
-          /*
-           * Pausar sin destruir.
-           */
-
-          try {
-            video.pause();
-          } catch (e) {}
-
-
-          container.style.display =
-            'none';
-
-
-          ocultarSpinner();
-
-
-          /*
-           * La experiencia AR continúa.
-           */
-
-          if (
-            experienciaActiva &&
-            targetActivo !== -1
-          ) {
-
-            instrucciones.style.display =
-              'none';
-
-          }
+          console.warn(
+            'No se pudo detener MindAR:',
+            err
+          );
 
         }
-      );
+
+      }
+    );
 
 
-    /* ======================================================
-       SALIDA DE LA PÁGINA
-       ====================================================== */
+    /* =========================================================
+       SALIR DE LA PÁGINA
+       ========================================================= */
 
     window.addEventListener(
       'pagehide',
@@ -1525,4 +1548,4 @@
   </script>
 
 </body>
-</html>
+  </html>
