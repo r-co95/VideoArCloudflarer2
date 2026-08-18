@@ -411,7 +411,15 @@
 
       try {
         const mindarSystem = sceneEl.systems['mindar-image-system'];
-        await mindarSystem.start();
+
+        // Salvavidas: si start() nunca resuelve ni rechaza (puede
+        // pasar si falta targets.mind o la página no está en HTTPS),
+        // no dejamos al usuario colgado en "Iniciando cámara..."
+        const tiempoLimite = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Tiempo de espera agotado al iniciar la cámara')), 15000)
+        );
+
+        await Promise.race([mindarSystem.start(), tiempoLimite]);
 
         inicio.style.display = 'none';
         btnFlash.style.display = 'flex';
