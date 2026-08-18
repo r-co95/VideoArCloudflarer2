@@ -2,88 +2,136 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Jorge & Astrid</title>
+
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: sans-serif; }
-    #inicio { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    #btn-comenzar { padding: 20px 40px; background: #2563eb; color: white; border-radius: 12px; border: 0; font-size: 18px; font-weight: bold; }
-    #btn-flash { position: fixed; top: 20px; left: 20px; z-index: 5000; background: rgba(0,0,0,0.7); color: white; border: 1px solid white; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; display: none; align-items: center; justify-content: center; }
-    #video-container { position: fixed; inset: 0; z-index: 6000; display: none; background: #000; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    /* ---------- Pantalla de inicio ---------- */
+    #inicio { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; }
+    #fondo-inicio { position: absolute; inset: 0; background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)), url('./fondo.jpg'); background-size: cover; background-position: center; filter: brightness(1.5); }
+    #contenedor-textos { position: absolute; bottom: 15vh; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    #inicio h1 { color: #fff; font-size: 32px; margin: 0; font-weight: 700; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    #btn-comenzar { border: 0; padding: 16px 40px; background: #2563eb; color: white; font-size: 18px; font-weight: 700; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    #btn-comenzar:active { transform: scale(0.97); }
+
+    /* ---------- UI de Cámara ---------- */
+    #instrucciones { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 4998; background: rgba(0, 0, 0, 0.65); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; display: none; text-align: center; max-width: 85vw; }
+    #btn-flash { position: fixed; top: 20px; left: 20px; z-index: 4999; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; border-radius: 50%; width: 44px; height: 44px; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: background 0.2s; }
+    
+    /* ---------- Spinner y Video ---------- */
+    #loading-spinner { position: fixed; inset: 0; z-index: 5002; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.35); }
+    .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: girar 0.8s linear infinite; }
+    @keyframes girar { to { transform: rotate(360deg); } }
+    #video-container { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 5000; display: none; background: #000; }
     #video-pantalla { width: 100%; height: 100%; object-fit: cover; }
-    #btn-cerrar { position: absolute; top: 20px; right: 20px; z-index: 6001; background: rgba(0,0,0,0.7); color: white; border: 1px solid white; border-radius: 50%; width: 44px; height: 44px; }
+    #btn-cerrar { position: absolute; top: 20px; right: 20px; z-index: 5001; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; border-radius: 50%; width: 44px; height: 44px; font-size: 22px; cursor: pointer; }
   </style>
 </head>
 
 <body>
+
   <div id="inicio">
-    <button id="btn-comenzar">Comenzar Experiencia</button>
+    <div id="fondo-inicio"></div>
+    <div id="contenedor-textos">
+      <h1>Jorge & Astrid</h1>
+      <button id="btn-comenzar">Comenzar Experiencia</button>
+    </div>
   </div>
-  
+
+  <div id="instrucciones">Apunta la cámara hacia la foto 📸</div>
   <button id="btn-flash">🔦</button>
+  <div id="loading-spinner"><div class="spinner"></div></div>
 
   <div id="video-container">
     <button id="btn-cerrar">&times;</button>
-    <video id="video-pantalla" playsinline webkit-playsinline loop></video>
+    <video id="video-pantalla" playsinline loop preload="auto"></video>
   </div>
 
-  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;" color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
     <a-entity id="targets-group"></a-entity>
   </a-scene>
 
   <script>
-    const btnComenzar = document.getElementById('btn-comenzar');
-    const btnFlash = document.getElementById('btn-flash');
-    const sceneEl = document.querySelector('a-scene');
-    const video = document.getElementById('video-pantalla');
+    const inicio = document.getElementById('inicio');
     const container = document.getElementById('video-container');
-    let flashEncendido = false;
+    const video = document.getElementById('video-pantalla');
+    const btnFlash = document.getElementById('btn-flash');
+    const targetsGroup = document.getElementById('targets-group');
+    const sceneEl = document.querySelector('a-scene');
+    const btnComenzar = document.getElementById('btn-comenzar');
+    const instrucciones = document.getElementById('instrucciones');
+    const loadingSpinner = document.getElementById('loading-spinner');
 
-    function getCameraTrack() {
+    let videoActual = null;
+    let flashEncendido = false;
+    const NUM_TARGETS = 10;
+
+    // --- Funciones auxiliares ---
+    function mostrarSpinner() { loadingSpinner.style.display = 'flex'; }
+    function ocultarSpinner() { loadingSpinner.style.display = 'none'; }
+    
+    function obtenerTrackCamara() {
       const mindarSystem = sceneEl.systems['mindar-image-system'];
-      const videoEl = mindarSystem?.video;
-      return videoEl?.srcObject?.getVideoTracks()[0];
+      return mindarSystem?.video?.srcObject?.getVideoTracks()[0];
     }
 
+    // --- Lógica de Linterna (Funcionando en Android) ---
     btnFlash.addEventListener('click', async () => {
-      const track = getCameraTrack();
+      const track = obtenerTrackCamara();
+      if (!track) return;
       
-      if (!track) {
-        alert("Error: Cámara no detectada.");
-        return;
-      }
-      
-      if (typeof track.getCapabilities !== 'function') {
-        alert("Tu navegador no soporta la API de linterna (getCapabilities). Usa Chrome.");
-        return;
-      }
-
-      const caps = track.getCapabilities();
-      if (!caps.torch) {
-        alert("Tu dispositivo reporta que no tiene linterna o la cámara no está en modo trasero.");
-        return;
-      }
-
       try {
+        const capabilities = (typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
+        if (!capabilities || !capabilities.torch) return;
+
         flashEncendido = !flashEncendido;
         await track.applyConstraints({ advanced: [{ torch: flashEncendido }] });
-        btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0,0,0,0.7)';
-      } catch (e) {
-        alert("Error al aplicar torch: " + e.message);
-      }
+        btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0, 0, 0, 0.7)';
+      } catch (err) { console.error('Error linterna:', err); }
     });
 
+    // --- Lógica de targets ---
+    for (let i = 0; i < NUM_TARGETS; i++) {
+      const el = document.createElement('a-entity');
+      el.setAttribute('mindar-image-target', `targetIndex: ${i}`);
+      el.addEventListener('targetFound', async () => {
+        instrucciones.style.display = 'none';
+        mostrarSpinner();
+        
+        // Aquí puedes poner tu lógica de búsqueda de video
+        const rutaVideo = `https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/Cita${String(i + 1).padStart(3, '0')}.mp4`;
+        video.src = rutaVideo;
+        video.play().catch(()=>{});
+      });
+      el.addEventListener('targetLost', () => {
+        video.pause();
+        container.style.display = 'none';
+        instrucciones.style.display = 'flex';
+        ocultarSpinner();
+      });
+      targetsGroup.appendChild(el);
+    }
+
+    video.addEventListener('playing', () => { ocultarSpinner(); container.style.display = 'block'; });
+
+    // --- Inicio ---
     btnComenzar.addEventListener('click', async () => {
+      btnComenzar.disabled = true;
       try {
         await sceneEl.systems['mindar-image-system'].start();
-        document.getElementById('inicio').style.display = 'none';
+        inicio.style.display = 'none';
         btnFlash.style.display = 'flex';
+        instrucciones.style.display = 'flex';
       } catch (e) {
-        alert("No se pudo iniciar la cámara: " + e.message);
+        alert("Error al iniciar cámara: " + e.message);
+        btnComenzar.disabled = false;
       }
     });
 
