@@ -393,20 +393,30 @@
       container.style.display = 'none';
     });
 
+    // Envuelve cualquier promesa con un límite de tiempo, para que
+    // nada pueda dejar la app colgada indefinidamente
+    function conTimeout(promise, ms) {
+      const limite = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms)
+      );
+      return Promise.race([promise, limite]);
+    }
+
     async function iniciarExperiencia() {
       btnComenzar.disabled = true;
       btnComenzar.textContent = 'Iniciando cámara...';
 
-      // Desbloquear audio en iOS: hay que reproducir (y pausar de
-      // inmediato) dentro del gesto del usuario, si no el primer
-      // video puede sonar mudo
+      // Desbloquear audio en iOS: reproducir (y pausar de inmediato)
+      // dentro del gesto del usuario. Sobre un <video> sin src esto
+      // a veces no resuelve ni rechaza en algunos navegadores, así
+      // que lo limitamos a 800ms y seguimos sin importar qué pase
       try {
         video.muted = false;
-        await video.play();
+        await conTimeout(video.play(), 800);
         video.pause();
         video.currentTime = 0;
       } catch (e) {
-        console.log('No se pudo desbloquear audio:', e);
+        console.log('Desbloqueo de audio omitido:', e.message || e);
       }
 
       try {
@@ -415,11 +425,7 @@
         // Salvavidas: si start() nunca resuelve ni rechaza (puede
         // pasar si falta targets.mind o la página no está en HTTPS),
         // no dejamos al usuario colgado en "Iniciando cámara..."
-        const tiempoLimite = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Tiempo de espera agotado al iniciar la cámara')), 15000)
-        );
-
-        await Promise.race([mindarSystem.start(), tiempoLimite]);
+        await conTimeout(mindarSystem.start(), 15000);
 
         inicio.style.display = 'none';
         btnFlash.style.display = 'flex';
