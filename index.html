@@ -31,7 +31,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Pantalla de inicio */
+    /* ---------- Pantalla de inicio ---------- */
 
     #inicio {
       position: fixed;
@@ -91,7 +91,7 @@
       transform: scale(0.97);
     }
 
-    /* UI de cámara */
+    /* ---------- UI de Cámara ---------- */
 
     #instrucciones {
       position: fixed;
@@ -148,7 +148,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
-    /* Spinner */
+    /* ---------- Spinner ---------- */
 
     #loading-spinner {
       position: fixed;
@@ -175,7 +175,7 @@
       }
     }
 
-    /* Video */
+    /* ---------- Video ---------- */
 
     #video-container {
       position: fixed;
@@ -212,34 +212,44 @@
 
 <body>
 
-  <!-- INICIO -->
+  <!-- ---------- INICIO ---------- -->
 
   <div id="inicio">
     <div id="fondo-inicio"></div>
 
     <div id="contenedor-textos">
       <h1>Jorge & Astrid</h1>
-      <button id="btn-comenzar">Comenzar Experiencia</button>
+      <button id="btn-comenzar">
+        Comenzar Experiencia
+      </button>
     </div>
   </div>
 
-  <!-- CÁMARA -->
+
+  <!-- ---------- INTERFAZ DE CÁMARA ---------- -->
 
   <div id="instrucciones">
     Apunta la cámara hacia la foto 📸
   </div>
 
   <button id="btn-flash">🔦</button>
-  <button id="btn-finalizar">Finalizar</button>
+
+  <button id="btn-finalizar">
+    Finalizar
+  </button>
 
   <div id="loading-spinner">
     <div class="spinner"></div>
   </div>
 
-  <!-- ÚNICO VIDEO -->
+
+  <!-- ---------- REPRODUCTOR ÚNICO ---------- -->
 
   <div id="video-container">
-    <button id="btn-cerrar">&times;</button>
+
+    <button id="btn-cerrar">
+      &times;
+    </button>
 
     <video
       id="video-pantalla"
@@ -247,9 +257,11 @@
       loop
       preload="auto">
     </video>
+
   </div>
 
-  <!-- MINDAR -->
+
+  <!-- ---------- MINDAR ---------- -->
 
   <a-scene
     mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
@@ -267,41 +279,65 @@
 
   </a-scene>
 
+
   <script>
 
-    const inicio = document.getElementById('inicio');
-    const container = document.getElementById('video-container');
-    const video = document.getElementById('video-pantalla');
-    const btnFlash = document.getElementById('btn-flash');
-    const btnFinalizar = document.getElementById('btn-finalizar');
-    const targetsGroup = document.getElementById('targets-group');
-    const sceneEl = document.querySelector('a-scene');
-    const btnComenzar = document.getElementById('btn-comenzar');
-    const instrucciones = document.getElementById('instrucciones');
-    const loadingSpinner = document.getElementById('loading-spinner');
+    /* ==========================================================
+       ELEMENTOS
+       ========================================================== */
 
-    /*
-     * ==========================================================
-     * CITAS
-     * ==========================================================
-     *
-     * Actualmente están activos los dos targets que ya tenía:
-     *
-     * target 0 → Cita001.mp4
-     * target 1 → Cita002.mp4
-     *
-     * Para agregar las siguientes:
-     *
-     * { target: 2 } → Cita003.mp4
-     * { target: 3 } → Cita004.mp4
-     *
-     * ...
-     *
-     * { target: 99 } → Cita100.mp4
-     *
-     * No se crean 100 elementos <video>.
-     * Toda la experiencia utiliza UN SOLO video.
-     */
+    const inicio =
+      document.getElementById('inicio');
+
+    const container =
+      document.getElementById('video-container');
+
+    const video =
+      document.getElementById('video-pantalla');
+
+    const btnFlash =
+      document.getElementById('btn-flash');
+
+    const btnFinalizar =
+      document.getElementById('btn-finalizar');
+
+    const targetsGroup =
+      document.getElementById('targets-group');
+
+    const sceneEl =
+      document.querySelector('a-scene');
+
+    const btnComenzar =
+      document.getElementById('btn-comenzar');
+
+    const instrucciones =
+      document.getElementById('instrucciones');
+
+    const loadingSpinner =
+      document.getElementById('loading-spinner');
+
+
+    /* ==========================================================
+       CONFIGURACIÓN DE CITAS
+       ==========================================================
+
+       Actualmente:
+
+       target 0 → Cita001.mp4
+       target 1 → Cita002.mp4
+
+       Para agregar:
+
+       target 2 → Cita003.mp4
+       target 3 → Cita004.mp4
+
+       ...
+
+       target 99 → Cita100.mp4
+
+       NO se crean 100 videos.
+       Se utiliza solamente un reproductor.
+       ========================================================== */
 
     const CITAS = [
       { target: 0 },
@@ -314,7 +350,8 @@
       // { target: 99 }
     ];
 
-    const TOTAL_CITAS = 100;
+    const TOTAL_TARGETS =
+      100;
 
     const BASE_VIDEO =
       'https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/';
@@ -324,28 +361,34 @@
        ESTADO
        ========================================================== */
 
-    let experienciaActiva = false;
+    let experienciaActiva =
+      false;
 
-    let flashEncendido = false;
+    let flashEncendido =
+      false;
 
-    let targetActivo = -1;
+    let targetActivo =
+      -1;
 
-    let videoTargetActual = -1;
+    let videoTargetActual =
+      -1;
 
     /*
-     * Evita que eventos de un video anterior
-     * interfieran con el actual.
+     * Evita que una reproducción anterior
+     * interfiera con una nueva.
      */
-    let generacionVideo = 0;
+    let generacionVideo =
+      0;
 
     /*
-     * Evita dobles acciones de la X.
-     */
-    let reiniciandoEscaneo = false;
-
-    /*
-     * Guarda solamente las posiciones de las citas
-     * que realmente hayan sido reproducidas.
+     * Posición de cada cita.
+     *
+     * IMPORTANTE:
+     *
+     * Estas posiciones solamente se conservan
+     * cuando se pierde el target.
+     *
+     * La X elimina la posición de la cita.
      */
     const posicionesVideo = {};
 
@@ -355,11 +398,13 @@
        ========================================================== */
 
     function mostrarSpinner() {
-      loadingSpinner.style.display = 'flex';
+      loadingSpinner.style.display =
+        'flex';
     }
 
     function ocultarSpinner() {
-      loadingSpinner.style.display = 'none';
+      loadingSpinner.style.display =
+        'none';
     }
 
 
@@ -370,9 +415,14 @@
     function obtenerTrackCamara() {
 
       const mindarSystem =
-        sceneEl.systems['mindar-image-system'];
+        sceneEl.systems[
+          'mindar-image-system'
+        ];
 
-      if (!mindarSystem || !mindarSystem.video) {
+      if (
+        !mindarSystem ||
+        !mindarSystem.video
+      ) {
         return null;
       }
 
@@ -386,7 +436,10 @@
       const tracks =
         stream.getVideoTracks();
 
-      if (!tracks || tracks.length === 0) {
+      if (
+        !tracks ||
+        !tracks.length
+      ) {
         return null;
       }
 
@@ -416,7 +469,10 @@
               ? track.getCapabilities()
               : null;
 
-          if (!capabilities || !capabilities.torch) {
+          if (
+            !capabilities ||
+            !capabilities.torch
+          ) {
             return;
           }
 
@@ -491,7 +547,8 @@
 
       }
 
-      flashEncendido = false;
+      flashEncendido =
+        false;
 
       btnFlash.style.background =
         'rgba(0, 0, 0, 0.7)';
@@ -499,7 +556,7 @@
 
 
     /* ==========================================================
-       POSICIÓN DEL VIDEO
+       GUARDAR POSICIÓN
        ========================================================== */
 
     function guardarPosicionActual() {
@@ -518,32 +575,40 @@
 
 
     /* ==========================================================
-       PAUSAR VIDEO
+       PAUSAR POR TARGET PERDIDO
        ========================================================== */
 
     function pausarVideo() {
 
+      /*
+       * Al retirar la imagen:
+       * conservar posición.
+       */
       guardarPosicionActual();
 
       try {
         video.pause();
       } catch (e) {}
 
-      container.style.display = 'none';
+      container.style.display =
+        'none';
 
       ocultarSpinner();
     }
 
 
     /* ==========================================================
-       RUTA DEL VIDEO
+       RUTA DE VIDEO
        ========================================================== */
 
-    function obtenerRutaVideo(targetIndex) {
+    function obtenerRutaVideo(
+      targetIndex
+    ) {
 
       const numero =
-        String(targetIndex + 1)
-          .padStart(3, '0');
+        String(
+          targetIndex + 1
+        ).padStart(3, '0');
 
       return (
         BASE_VIDEO +
@@ -553,18 +618,22 @@
 
 
     /* ==========================================================
-       REPRODUCIR / REANUDAR CITA
+       REPRODUCIR / REANUDAR
        ========================================================== */
 
-    async function reproducirCita(targetIndex) {
+    async function reproducirCita(
+      targetIndex
+    ) {
 
       const rutaVideo =
-        obtenerRutaVideo(targetIndex);
+        obtenerRutaVideo(
+          targetIndex
+        );
 
 
       /*
-       * Si es la misma cita que ya estaba cargada,
-       * no volvemos a descargarla.
+       * Si es la misma cita que ya está
+       * cargada, solamente continuar.
        */
       if (
         videoTargetActual === targetIndex &&
@@ -580,7 +649,8 @@
 
 
       /*
-       * Guardar la posición de la cita anterior.
+       * Si veníamos de otra cita,
+       * guardar su posición.
        */
       guardarPosicionActual();
 
@@ -594,27 +664,28 @@
         targetIndex;
 
 
-      /*
-       * Cargar solamente este video.
-       */
       video.src =
         rutaVideo;
 
 
       const posicion =
-        posicionesVideo[targetIndex];
+        posicionesVideo[
+          targetIndex
+        ];
 
 
       /*
-       * Si ya habíamos visto esta cita,
-       * recuperar su posición.
+       * Si existe una posición guardada,
+       * reanudar desde ella.
        */
       if (
         typeof posicion === 'number' &&
         isFinite(posicion)
       ) {
 
-        if (video.readyState >= 1) {
+        if (
+          video.readyState >= 1
+        ) {
 
           try {
             video.currentTime =
@@ -623,33 +694,40 @@
 
         } else {
 
-          await new Promise(resolve => {
+          await new Promise(
+            resolve => {
 
-            video.addEventListener(
-              'loadedmetadata',
-              () => {
+              video.addEventListener(
+                'loadedmetadata',
+                () => {
 
-                try {
-                  video.currentTime =
-                    posicion;
-                } catch (e) {}
+                  try {
+                    video.currentTime =
+                      posicion;
+                  } catch (e) {}
 
-                resolve();
+                  resolve();
 
-              },
-              {
-                once: true
-              }
-            );
+                },
+                {
+                  once: true
+                }
+              );
 
-          });
+            }
+          );
 
         }
 
       } else {
 
+        /*
+         * Cita nueva:
+         * comenzar desde 0.
+         */
         try {
-          video.currentTime = 0;
+          video.currentTime =
+            0;
         } catch (e) {}
 
       }
@@ -671,7 +749,7 @@
 
 
     /* ==========================================================
-       LIMPIAR VIDEO
+       LIMPIAR REPRODUCTOR
        ========================================================== */
 
     function limpiarVideo() {
@@ -680,13 +758,16 @@
         video.pause();
       } catch (e) {}
 
-      video.removeAttribute('src');
+      video.removeAttribute(
+        'src'
+      );
 
       try {
         video.load();
       } catch (e) {}
 
-      videoTargetActual = -1;
+      videoTargetActual =
+        -1;
 
       container.style.display =
         'none';
@@ -696,84 +777,78 @@
 
 
     /* ==========================================================
-       X — RESET DEL VIDEO / ESCANEO
+       X — REINICIO COMPLETO DEL ESCANEO
        ==========================================================
-       
-       IMPORTANTE:
-       
-       NO detenemos MindAR.
-       NO hacemos stop().
-       NO hacemos start().
-       
-       La cámara continúa funcionando.
-       
+
+       La X NO guarda posición.
+
        La X:
-       - guarda posición;
-       - pausa;
+       - detiene el video;
+       - elimina la posición de la cita;
        - limpia el reproductor;
-       - muestra nuevamente la instrucción;
-       - espera un nuevo reconocimiento.
-       
-       Para volver a escanear la MISMA imagen,
-       simplemente hay que retirarla de la cámara
-       y volverla a colocar.
-       
-       ========================================================== */
+       - limpia el target activo;
+       - deja la cámara funcionando;
+       - vuelve a mostrar la instrucción.
 
-    async function resetearEscaneo() {
+       NO:
+       - detiene MindAR;
+       - apaga la cámara;
+       - vuelve al menú.
 
-      if (
-        !experienciaActiva ||
-        reiniciandoEscaneo
-      ) {
-        return;
-      }
-
-      reiniciandoEscaneo = true;
-
-      generacionVideo++;
-
-
-      /*
-       * Guardar la posición antes de limpiar.
-       */
-      guardarPosicionActual();
-
-
-      /*
-       * Ocultar/limpiar únicamente el video.
-       * La cámara de MindAR NO se toca.
-       */
-      limpiarVideo();
-
-
-      /*
-       * El target deja de considerarse activo
-       * dentro de nuestra aplicación.
-       */
-      targetActivo = -1;
-
-
-      /*
-       * Volver a mostrar la instrucción.
-       */
-      instrucciones.style.display =
-        'flex';
-
-
-      reiniciandoEscaneo = false;
-    }
-
-
-    /* ==========================================================
-       BOTÓN X
+       Si se vuelve a escanear esa misma cita,
+       comienza desde 0:00.
        ========================================================== */
 
     document
       .getElementById('btn-cerrar')
       .addEventListener(
         'click',
-        resetearEscaneo
+        () => {
+
+          if (
+            !experienciaActiva
+          ) {
+            return;
+          }
+
+
+          generacionVideo++;
+
+
+          /*
+           * Eliminar posición de la cita actual.
+           */
+          if (
+            videoTargetActual >= 0
+          ) {
+
+            delete posicionesVideo[
+              videoTargetActual
+            ];
+
+          }
+
+
+          /*
+           * Limpiar video.
+           */
+          limpiarVideo();
+
+
+          /*
+           * Resetear target.
+           */
+          targetActivo =
+            -1;
+
+
+          /*
+           * Volver a modo escaneo.
+           */
+          instrucciones.style.display =
+            'flex';
+
+        }
       );
 
 
@@ -781,134 +856,139 @@
        CREAR TARGETS
        ========================================================== */
 
-    CITAS.forEach(cita => {
+    CITAS.forEach(
+      cita => {
 
-      if (
-        typeof cita.target !== 'number' ||
-        cita.target < 0 ||
-        cita.target >= TOTAL_CITAS
-      ) {
+        if (
+          typeof cita.target !== 'number' ||
+          cita.target < 0 ||
+          cita.target >= TOTAL_TARGETS
+        ) {
 
-        console.warn(
-          'Target inválido:',
-          cita.target
-        );
-
-        return;
-      }
-
-
-      const el =
-        document.createElement(
-          'a-entity'
-        );
-
-
-      el.setAttribute(
-        'mindar-image-target',
-        `targetIndex: ${cita.target}`
-      );
-
-
-      /* ========================================================
-         TARGET ENCONTRADO
-         ======================================================== */
-
-      el.addEventListener(
-        'targetFound',
-        async () => {
-
-          if (
-            !experienciaActiva ||
-            reiniciandoEscaneo
-          ) {
-            return;
-          }
-
-
-          targetActivo =
-            cita.target;
-
-
-          const generacionActual =
-            ++generacionVideo;
-
-
-          instrucciones.style.display =
-            'none';
-
-
-          mostrarSpinner();
-
-
-          await reproducirCita(
+          console.warn(
+            'Target inválido:',
             cita.target
           );
 
-
-          /*
-           * Si mientras cargaba cambió el estado,
-           * no hacemos nada más.
-           */
-          if (
-            !experienciaActiva ||
-            generacionActual !== generacionVideo ||
-            targetActivo !== cita.target
-          ) {
-
-            return;
-          }
-
+          return;
         }
-      );
 
 
-      /* ========================================================
-         TARGET PERDIDO
-         ======================================================== */
-
-      el.addEventListener(
-        'targetLost',
-        () => {
-
-          /*
-           * Solo reaccionamos si era
-           * el target que estábamos reproduciendo.
-           */
-          if (
-            targetActivo !== cita.target
-          ) {
-            return;
-          }
+        const el =
+          document.createElement(
+            'a-entity'
+          );
 
 
-          targetActivo = -1;
-
-          generacionVideo++;
-
-
-          /*
-           * PAUSA.
-           *
-           * No borramos la posición.
-           */
-          pausarVideo();
+        el.setAttribute(
+          'mindar-image-target',
+          `targetIndex: ${cita.target}`
+        );
 
 
-          if (experienciaActiva) {
+        /* ------------------------------------------------------
+           TARGET ENCONTRADO
+           ------------------------------------------------------ */
+
+        el.addEventListener(
+          'targetFound',
+          async () => {
+
+            if (
+              !experienciaActiva
+            ) {
+              return;
+            }
+
+
+            targetActivo =
+              cita.target;
+
+
+            const generacionActual =
+              ++generacionVideo;
+
 
             instrucciones.style.display =
-              'flex';
+              'none';
+
+
+            mostrarSpinner();
+
+
+            await reproducirCita(
+              cita.target
+            );
+
+
+            /*
+             * Evita que un evento viejo
+             * interfiera con el actual.
+             */
+            if (
+              !experienciaActiva ||
+              generacionActual !== generacionVideo ||
+              targetActivo !== cita.target
+            ) {
+              return;
+            }
 
           }
-
-        }
-      );
+        );
 
 
-      targetsGroup.appendChild(el);
+        /* ------------------------------------------------------
+           TARGET PERDIDO
+           ------------------------------------------------------ */
 
-    });
+        el.addEventListener(
+          'targetLost',
+          () => {
+
+            /*
+             * Solo actuar si este era
+             * el target activo.
+             */
+            if (
+              targetActivo !==
+              cita.target
+            ) {
+              return;
+            }
+
+
+            targetActivo =
+              -1;
+
+
+            generacionVideo++;
+
+
+            /*
+             * Pausar y conservar posición.
+             */
+            pausarVideo();
+
+
+            if (
+              experienciaActiva
+            ) {
+
+              instrucciones.style.display =
+                'flex';
+
+            }
+
+          }
+        );
+
+
+        targetsGroup.appendChild(
+          el
+        );
+
+      }
+    );
 
 
     /* ==========================================================
@@ -919,7 +999,9 @@
       'playing',
       () => {
 
-        if (!experienciaActiva) {
+        if (
+          !experienciaActiva
+        ) {
           return;
         }
 
@@ -933,7 +1015,7 @@
 
 
     /* ==========================================================
-       GUARDAR POSICIÓN
+       GUARDAR POSICIÓN MIENTRAS REPRODUCE
        ========================================================== */
 
     video.addEventListener(
@@ -969,7 +1051,9 @@
       'click',
       async () => {
 
-        if (experienciaActiva) {
+        if (
+          experienciaActiva
+        ) {
           return;
         }
 
@@ -995,19 +1079,24 @@
           }
 
 
-          experienciaActiva =
-            true;
+          /*
+           * El botón comenzar siempre
+           * parte del estado inicial.
+           */
+          limpiarVideo();
 
 
           targetActivo =
             -1;
 
-
           videoTargetActual =
             -1;
 
-
           generacionVideo++;
+
+
+          experienciaActiva =
+            true;
 
 
           await mindarSystem.start();
@@ -1016,17 +1105,15 @@
           inicio.style.display =
             'none';
 
-
           btnFlash.style.display =
             'flex';
-
 
           btnFinalizar.style.display =
             'block';
 
-
           instrucciones.style.display =
             'flex';
+
 
         } catch (e) {
 
@@ -1057,142 +1144,77 @@
 
     /* ==========================================================
        FINALIZAR
+       ==========================================================
+
+       Para que:
+
+       Página cargada
+       =
+       Finalizar → Comenzar
+
+       usamos una recarga real de la página.
+
+       Esto evita reutilizar una instancia de MindAR
+       que ya fue detenida y garantiza un estado
+       completamente limpio.
        ========================================================== */
 
     btnFinalizar.addEventListener(
       'click',
       async () => {
 
-        /*
-         * Desactivar nuestra aplicación primero.
-         */
         experienciaActiva =
           false;
 
 
-        reiniciandoEscaneo =
-          false;
+        generacionVideo++;
 
 
         targetActivo =
           -1;
 
 
-        generacionVideo++;
-
-
         /*
-         * Limpiar video.
-         */
-        limpiarVideo();
-
-
-        /*
-         * Finalizar sí borra las posiciones.
-         * X NO las borra.
-         */
-        Object.keys(
-          posicionesVideo
-        ).forEach(key => {
-          delete posicionesVideo[key];
-        });
-
-
-        /*
-         * Apagar linterna.
+         * Apagar linterna antes de salir.
          */
         await apagarLinterna();
 
 
         /*
-         * Ocultar controles.
-         */
-        btnFlash.style.display =
-          'none';
-
-        btnFinalizar.style.display =
-          'none';
-
-        instrucciones.style.display =
-          'none';
-
-
-        /*
-         * Volver a pantalla inicial.
-         */
-        inicio.style.display =
-          'flex';
-
-
-        btnComenzar.disabled =
-          false;
-
-
-        /*
-         * Ahora sí detenemos MindAR,
-         * porque FINALIZAR significa terminar
-         * completamente la experiencia.
+         * Detener video.
          */
         try {
-
-          const mindarSystem =
-            sceneEl.systems[
-              'mindar-image-system'
-            ];
+          video.pause();
+        } catch (e) {}
 
 
-          if (
-            mindarSystem &&
-            typeof mindarSystem.stop === 'function'
-          ) {
-
-            mindarSystem.stop();
-
-          }
-
-        } catch (err) {
-
-          console.warn(
-            'No se pudo detener MindAR:',
-            err
-          );
-
-        }
+        /*
+         * La página se recarga completamente.
+         *
+         * Esto deja:
+         * - MindAR limpio
+         * - cámara limpia
+         * - targets limpios
+         * - video limpio
+         * - posiciones limpias
+         * - pantalla inicial limpia
+         */
+        window.location.reload();
 
       }
     );
 
 
     /* ==========================================================
-       SALIR DE LA PÁGINA
+       SALIDA DE PÁGINA
        ========================================================== */
 
     window.addEventListener(
       'pagehide',
-      async () => {
+      () => {
 
         try {
-          await apagarLinterna();
-        } catch (e) {}
-
-
-        try {
-
-          const mindarSystem =
-            sceneEl.systems[
-              'mindar-image-system'
-            ];
-
-
-          if (
-            mindarSystem &&
-            typeof mindarSystem.stop === 'function'
-          ) {
-
-            mindarSystem.stop();
-
-          }
-
+          video.pause();
         } catch (e) {}
 
       }
