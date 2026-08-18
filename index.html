@@ -2,26 +2,48 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1.0,
+             maximum-scale=1.0,
+             user-scalable=no,
+             viewport-fit=cover">
+
   <title>Jorge & Astrid</title>
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
       background: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
     }
 
-    /* ---------- Pantalla de inicio ---------- */
+    /* =========================================================
+       PANTALLA DE INICIO
+       ========================================================= */
+
     #inicio {
       position: fixed;
       inset: 0;
@@ -34,11 +56,17 @@
     #fondo-inicio {
       position: absolute;
       inset: 0;
+
       background:
-        linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
+        linear-gradient(
+          rgba(0, 0, 0, 0.1),
+          rgba(0, 0, 0, 0.2)
+        ),
         url('./fondo.jpg');
+
       background-size: cover;
       background-position: center;
+
       filter: brightness(1.5);
     }
 
@@ -46,9 +74,11 @@
       position: absolute;
       bottom: 15vh;
       width: 100%;
+
       display: flex;
       flex-direction: column;
       align-items: center;
+
       gap: 15px;
     }
 
@@ -58,99 +88,172 @@
       margin: 0;
       font-weight: 700;
       text-align: center;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+
+      text-shadow:
+        0 2px 4px rgba(0,0,0,0.5);
     }
 
     #btn-comenzar {
       border: 0;
       padding: 16px 40px;
+
       background: #2563eb;
       color: white;
+
       font-size: 18px;
       font-weight: 700;
+
       border-radius: 12px;
+
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.4);
     }
 
     #btn-comenzar:active {
       transform: scale(0.97);
     }
 
-    /* ---------- UI de Cámara ---------- */
+
+    /* =========================================================
+       UI DE CÁMARA
+       ========================================================= */
+
     #instrucciones {
       position: fixed;
+
       top: 30px;
       left: 50%;
+
       transform: translateX(-50%);
+
       z-index: 4998;
+
       background: rgba(0, 0, 0, 0.65);
       color: #fff;
+
       padding: 10px 20px;
+
       border-radius: 30px;
+
       font-size: 14px;
       font-weight: 600;
+
       display: none;
+
       text-align: center;
+
       max-width: 85vw;
     }
 
+
+    /* =========================================================
+       BOTÓN LINTERNA
+       ========================================================= */
+
     #btn-flash {
       position: fixed;
+
       top: 20px;
       left: 20px;
+
       z-index: 4999;
+
       background: rgba(0, 0, 0, 0.7);
       color: #fff;
+
       border: 1px solid #fff;
+
       border-radius: 50%;
+
       width: 44px;
       height: 44px;
+
       font-size: 20px;
+
       cursor: pointer;
+
       display: none;
+
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      transition: background 0.2s;
+
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.4);
+
+      transition:
+        background 0.2s;
     }
+
+
+    /* =========================================================
+       BOTÓN FINALIZAR
+       ========================================================= */
 
     #btn-finalizar {
       position: fixed;
+
       bottom: 30px;
       left: 50%;
+
       transform: translateX(-50%);
+
       z-index: 4999;
+
       background: rgba(0, 0, 0, 0.7);
       color: #fff;
+
       border: 1px solid #fff;
+
       padding: 12px 24px;
+
       border-radius: 20px;
+
       font-size: 14px;
       font-weight: 600;
+
       cursor: pointer;
+
       display: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.4);
     }
 
-    /* ---------- Spinner y Video ---------- */
+
+    /* =========================================================
+       SPINNER
+       ========================================================= */
+
     #loading-spinner {
       position: fixed;
+
       inset: 0;
+
       z-index: 5002;
+
       display: none;
+
       align-items: center;
       justify-content: center;
+
       background: rgba(0, 0, 0, 0.35);
     }
 
     .spinner {
       width: 44px;
       height: 44px;
-      border: 4px solid rgba(255,255,255,0.3);
+
+      border:
+        4px solid rgba(255,255,255,0.3);
+
       border-top-color: #fff;
+
       border-radius: 50%;
-      animation: girar 0.8s linear infinite;
+
+      animation:
+        girar 0.8s linear infinite;
     }
 
     @keyframes girar {
@@ -159,78 +262,150 @@
       }
     }
 
+
+    /* =========================================================
+       VIDEO
+       ========================================================= */
+
     #video-container {
       position: fixed;
+
       inset: 0;
+
       width: 100vw;
       height: 100vh;
+
       z-index: 5000;
+
       display: none;
+
       background: #000;
     }
 
     #video-pantalla {
       width: 100%;
       height: 100%;
+
       object-fit: cover;
     }
 
+
+    /* =========================================================
+       BOTÓN CERRAR VIDEO
+       ========================================================= */
+
     #btn-cerrar {
       position: absolute;
+
       top: 20px;
       right: 20px;
+
       z-index: 5001;
+
       background: rgba(0, 0, 0, 0.7);
       color: #fff;
+
       border: 1px solid #fff;
+
       border-radius: 50%;
+
       width: 44px;
       height: 44px;
+
       font-size: 22px;
+
       cursor: pointer;
     }
   </style>
 </head>
 
+
 <body>
 
+
+  <!-- =======================================================
+       PANTALLA INICIAL
+       ======================================================= -->
+
   <div id="inicio">
+
     <div id="fondo-inicio"></div>
 
     <div id="contenedor-textos">
-      <h1>Jorge & Astrid</h1>
-      <button id="btn-comenzar">Comenzar Experiencia</button>
+
+      <h1>
+        Jorge & Astrid
+      </h1>
+
+      <button id="btn-comenzar">
+        Comenzar Experiencia
+      </button>
+
     </div>
+
   </div>
+
+
+  <!-- =======================================================
+       INTERFAZ CÁMARA
+       ======================================================= -->
 
   <div id="instrucciones">
     Apunta la cámara hacia la foto 📸
   </div>
 
-  <button id="btn-flash">🔦</button>
+  <button id="btn-flash">
+    🔦
+  </button>
 
   <button id="btn-finalizar">
     Finalizar
   </button>
 
+
+  <!-- =======================================================
+       LOADING
+       ======================================================= -->
+
   <div id="loading-spinner">
     <div class="spinner"></div>
   </div>
 
+
+  <!-- =======================================================
+       VIDEO
+       ======================================================= -->
+
   <div id="video-container">
-    <button id="btn-cerrar">&times;</button>
+
+    <button id="btn-cerrar">
+      &times;
+    </button>
+
     <video
       id="video-pantalla"
       playsinline
       loop
       preload="auto">
     </video>
+
   </div>
 
+
+  <!-- =======================================================
+       MINDAR
+       ======================================================= -->
+
   <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+    mindar-image="
+      imageTargetSrc: ./targets.mind;
+      autoStart: false;
+    "
     color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true;"
+    renderer="
+      colorManagement: true;
+      physicallyCorrectLights: true;
+    "
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
@@ -243,24 +418,114 @@
 
   </a-scene>
 
-  <script>
-    const inicio = document.getElementById('inicio');
-    const container = document.getElementById('video-container');
-    const video = document.getElementById('video-pantalla');
-    const btnFlash = document.getElementById('btn-flash');
-    const btnFinalizar = document.getElementById('btn-finalizar');
-    const targetsGroup = document.getElementById('targets-group');
-    const sceneEl = document.querySelector('a-scene');
-    const btnComenzar = document.getElementById('btn-comenzar');
-    const instrucciones = document.getElementById('instrucciones');
-    const loadingSpinner = document.getElementById('loading-spinner');
 
-    const NUM_TARGETS = 10;
+  <script>
+
+    /* =========================================================
+       ELEMENTOS
+       ========================================================= */
+
+    const inicio =
+      document.getElementById('inicio');
+
+    const container =
+      document.getElementById('video-container');
+
+    const video =
+      document.getElementById('video-pantalla');
+
+    const btnFlash =
+      document.getElementById('btn-flash');
+
+    const btnFinalizar =
+      document.getElementById('btn-finalizar');
+
+    const targetsGroup =
+      document.getElementById('targets-group');
+
+    const sceneEl =
+      document.querySelector('a-scene');
+
+    const btnComenzar =
+      document.getElementById('btn-comenzar');
+
+    const instrucciones =
+      document.getElementById('instrucciones');
+
+    const loadingSpinner =
+      document.getElementById('loading-spinner');
+
+
+    /* =========================================================
+       CONFIGURACIÓN DE LAS CITAS
+       =========================================================
+
+       AQUÍ SE AGREGAN LAS CITAS QUE YA EXISTAN.
+
+       No es necesario tener las 100 todavía.
+
+       Ejemplo:
+
+       target 0 = Cita 001
+       target 1 = Cita 002
+       target 2 = Cita 003
+
+       Cuando tenga la cita 4 simplemente agrega:
+
+       { target: 3 }
+
+       El sistema generará automáticamente:
+
+       Cita004.mp4
+
+       ========================================================= */
+
+    const CITAS = [
+
+      { target: 0 },
+
+      /*
+      { target: 1 },
+      { target: 2 },
+      { target: 3 },
+      { target: 4 },
+      { target: 5 },
+      { target: 6 },
+      { target: 7 },
+      { target: 8 },
+      { target: 9 },
+
+      ...
+      
+      Hasta:
+
+      { target: 99 }
+
+      */
+    ];
+
+
+    /* =========================================================
+       CONFIGURACIÓN GENERAL
+       ========================================================= */
+
+    const TOTAL_CITAS_MAXIMO = 100;
+
+    const BASE_VIDEO =
+      'https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/';
+
+
+    /* =========================================================
+       ESTADO
+       ========================================================= */
 
     let flashEncendido = false;
+
     let experienciaActiva = false;
+
     let targetActivo = -1;
-    let reproduccionGeneracion = 0;
+
+    let generacionVideo = 0;
 
 
     /* =========================================================
@@ -268,19 +533,27 @@
        ========================================================= */
 
     function mostrarSpinner() {
-      loadingSpinner.style.display = 'flex';
+
+      loadingSpinner.style.display =
+        'flex';
+
     }
 
+
     function ocultarSpinner() {
-      loadingSpinner.style.display = 'none';
+
+      loadingSpinner.style.display =
+        'none';
+
     }
 
 
     /* =========================================================
-       CÁMARA
+       OBTENER CÁMARA
        ========================================================= */
 
     function obtenerTrackCamara() {
+
       const mindarSystem =
         sceneEl.systems['mindar-image-system'];
 
@@ -288,94 +561,109 @@
         return null;
       }
 
-      const videoMindAR = mindarSystem.video;
+      const videoMindAR =
+        mindarSystem.video;
 
-      if (!videoMindAR || !videoMindAR.srcObject) {
+      if (
+        !videoMindAR ||
+        !videoMindAR.srcObject
+      ) {
         return null;
       }
 
       const tracks =
-        videoMindAR.srcObject.getVideoTracks();
+        videoMindAR.srcObject
+          .getVideoTracks();
 
-      return tracks && tracks.length
-        ? tracks[0]
-        : null;
+      if (
+        !tracks ||
+        tracks.length === 0
+      ) {
+        return null;
+      }
+
+      return tracks[0];
     }
 
 
     /* =========================================================
-       LINTERNА
+       LINTERNA
        ========================================================= */
 
-    btnFlash.addEventListener('click', async () => {
+    btnFlash.addEventListener(
+      'click',
+      async () => {
 
-      const track = obtenerTrackCamara();
+        const track =
+          obtenerTrackCamara();
 
-      if (!track) {
-        console.warn('No se encontró el track de cámara.');
-        return;
-      }
+        if (!track) {
 
-      try {
+          console.warn(
+            'No se encontró el track de cámara.'
+          );
 
-        const capabilities =
-          typeof track.getCapabilities === 'function'
-            ? track.getCapabilities()
-            : null;
-
-        if (!capabilities || !capabilities.torch) {
-          console.warn('La cámara no ofrece control de linterna.');
           return;
         }
 
-        const nuevoEstado = !flashEncendido;
 
-        await track.applyConstraints({
-          advanced: [
-            {
-              torch: nuevoEstado
-            }
-          ]
-        });
+        try {
 
-        flashEncendido = nuevoEstado;
+          const capabilities =
+            typeof track.getCapabilities === 'function'
+              ? track.getCapabilities()
+              : null;
 
-        btnFlash.style.background =
-          flashEncendido
-            ? '#facc15'
-            : 'rgba(0, 0, 0, 0.7)';
 
-      } catch (err) {
+          if (
+            !capabilities ||
+            !capabilities.torch
+          ) {
 
-        console.error(
-          'Error al controlar la linterna:',
-          err
-        );
+            console.warn(
+              'La cámara no permite controlar la linterna.'
+            );
+
+            return;
+          }
+
+
+          const nuevoEstado =
+            !flashEncendido;
+
+
+          await track.applyConstraints({
+
+            advanced: [
+              {
+                torch: nuevoEstado
+              }
+            ]
+
+          });
+
+
+          flashEncendido =
+            nuevoEstado;
+
+
+          btnFlash.style.background =
+            flashEncendido
+              ? '#facc15'
+              : 'rgba(0, 0, 0, 0.7)';
+
+
+        } catch (err) {
+
+          console.error(
+            'Error linterna:',
+            err
+          );
+
+        }
 
       }
-    });
-
-
-    /* =========================================================
-       REINICIAR VIDEO
-       ========================================================= */
-
-    function detenerVideo() {
-
-      try {
-        video.pause();
-      } catch (e) {}
-
-      video.removeAttribute('src');
-
-      try {
-        video.load();
-      } catch (e) {}
-
-      container.style.display = 'none';
-
-      ocultarSpinner();
-    }
+    );
 
 
     /* =========================================================
@@ -388,31 +676,38 @@
         return;
       }
 
-      const track = obtenerTrackCamara();
 
-      if (!track) {
-        flashEncendido = false;
-        btnFlash.style.background =
-          'rgba(0, 0, 0, 0.7)';
-        return;
-      }
+      const track =
+        obtenerTrackCamara();
+
 
       try {
 
-        const capabilities =
-          typeof track.getCapabilities === 'function'
-            ? track.getCapabilities()
-            : null;
+        if (track) {
 
-        if (capabilities && capabilities.torch) {
+          const capabilities =
+            typeof track.getCapabilities === 'function'
+              ? track.getCapabilities()
+              : null;
 
-          await track.applyConstraints({
-            advanced: [
-              {
-                torch: false
-              }
-            ]
-          });
+
+          if (
+            capabilities &&
+            capabilities.torch
+          ) {
+
+            await track.applyConstraints({
+
+              advanced: [
+                {
+                  torch: false
+                }
+              ]
+
+            });
+
+          }
+
         }
 
       } catch (err) {
@@ -424,10 +719,60 @@
 
       }
 
+
       flashEncendido = false;
+
 
       btnFlash.style.background =
         'rgba(0, 0, 0, 0.7)';
+
+    }
+
+
+    /* =========================================================
+       DETENER VIDEO
+       ========================================================= */
+
+    function detenerVideo() {
+
+      try {
+        video.pause();
+      } catch (e) {}
+
+
+      video.removeAttribute('src');
+
+
+      try {
+        video.load();
+      } catch (e) {}
+
+
+      container.style.display =
+        'none';
+
+
+      ocultarSpinner();
+
+    }
+
+
+    /* =========================================================
+       GENERAR NOMBRE DEL VIDEO
+       ========================================================= */
+
+    function obtenerRutaVideo(numeroCita) {
+
+      const numeroFormateado =
+        String(numeroCita)
+          .padStart(3, '0');
+
+
+      return (
+        BASE_VIDEO +
+        `Cita${numeroFormateado}.mp4`
+      );
+
     }
 
 
@@ -435,171 +780,257 @@
        FINALIZAR EXPERIENCIA
        ========================================================= */
 
-    btnFinalizar.addEventListener('click', async () => {
+    btnFinalizar.addEventListener(
+      'click',
+      async () => {
 
-      experienciaActiva = false;
-      targetActivo = -1;
-      reproduccionGeneracion++;
+        experienciaActiva =
+          false;
 
-      detenerVideo();
+        targetActivo =
+          -1;
 
-      await apagarLinterna();
+        generacionVideo++;
 
-      btnFlash.style.display = 'none';
-      btnFinalizar.style.display = 'none';
-      instrucciones.style.display = 'none';
 
-      inicio.style.display = 'flex';
+        detenerVideo();
 
-      btnComenzar.disabled = false;
 
-      /*
-       * Se intenta detener MindAR si dispone
-       * del método correspondiente.
-       */
-      try {
+        await apagarLinterna();
 
-        const mindarSystem =
-          sceneEl.systems['mindar-image-system'];
 
-        if (
-          mindarSystem &&
-          typeof mindarSystem.stop === 'function'
-        ) {
-          mindarSystem.stop();
+        btnFlash.style.display =
+          'none';
+
+        btnFinalizar.style.display =
+          'none';
+
+        instrucciones.style.display =
+          'none';
+
+
+        inicio.style.display =
+          'flex';
+
+
+        btnComenzar.disabled =
+          false;
+
+
+        try {
+
+          const mindarSystem =
+            sceneEl.systems[
+              'mindar-image-system'
+            ];
+
+
+          if (
+            mindarSystem &&
+            typeof mindarSystem.stop === 'function'
+          ) {
+
+            mindarSystem.stop();
+
+          }
+
+        } catch (err) {
+
+          console.warn(
+            'No se pudo detener MindAR:',
+            err
+          );
+
         }
 
-      } catch (err) {
-
-        console.warn(
-          'No fue posible detener MindAR:',
-          err
-        );
-
       }
-    });
+    );
 
 
     /* =========================================================
-       CREACIÓN DE TARGETS
+       CREAR TARGETS
+       =========================================================
+
+       IMPORTANTE:
+
+       Solo se crean los targets que están
+       actualmente incluidos en CITAS.
+
+       Por eso no importa que todavía
+       no tenga las 100 citas.
+
        ========================================================= */
 
-    for (let i = 0; i < NUM_TARGETS; i++) {
+    CITAS.forEach(
+      (cita) => {
 
-      const el = document.createElement('a-entity');
+        if (
+          cita.target < 0 ||
+          cita.target >= TOTAL_CITAS_MAXIMO
+        ) {
 
-      el.setAttribute(
-        'mindar-image-target',
-        `targetIndex: ${i}`
-      );
+          console.warn(
+            `Target inválido: ${cita.target}`
+          );
 
-
-      /* ---------- TARGET ENCONTRADO ---------- */
-
-      el.addEventListener(
-        'targetFound',
-        async () => {
-
-          if (!experienciaActiva) {
-            return;
-          }
-
-          targetActivo = i;
-
-          const generacionActual =
-            ++reproduccionGeneracion;
-
-          instrucciones.style.display = 'none';
-
-          mostrarSpinner();
-
-          const rutaVideo =
-            `https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/Cita${String(i + 1).padStart(3, '0')}.mp4`;
+          return;
+        }
 
 
-          /*
-           * Siempre detenemos correctamente el video anterior
-           * antes de cargar el nuevo.
-           */
-
-          try {
-            video.pause();
-          } catch (e) {}
+        const el =
+          document.createElement(
+            'a-entity'
+          );
 
 
-          video.src = rutaVideo;
+        el.setAttribute(
+          'mindar-image-target',
+          `targetIndex: ${cita.target}`
+        );
 
-          video.currentTime = 0;
 
+        /* =====================================================
+           TARGET ENCONTRADO
+           ===================================================== */
 
-          try {
+        el.addEventListener(
+          'targetFound',
+          async () => {
 
-            await video.play();
-
-            /*
-             * Si durante la carga cambió el target,
-             * esta reproducción ya no debe controlar
-             * la interfaz.
-             */
-
-            if (
-              !experienciaActiva ||
-              generacionActual !== reproduccionGeneracion ||
-              targetActivo !== i
-            ) {
+            if (!experienciaActiva) {
               return;
             }
 
-          } catch (err) {
+
+            targetActivo =
+              cita.target;
+
+
+            const generacionActual =
+              ++generacionVideo;
+
+
+            instrucciones.style.display =
+              'none';
+
+
+            mostrarSpinner();
+
 
             /*
-             * El navegador puede bloquear temporalmente
-             * la reproducción. No rompemos la experiencia.
+             * target 0 = Cita001
+             * target 1 = Cita002
+             *
+             * Por eso usamos +1.
              */
 
-            console.warn(
-              'No se pudo reproducir el video automáticamente:',
-              err
-            );
+            const numeroCita =
+              cita.target + 1;
+
+
+            const rutaVideo =
+              obtenerRutaVideo(
+                numeroCita
+              );
+
+
+            try {
+              video.pause();
+            } catch (e) {}
+
+
+            video.src =
+              rutaVideo;
+
+
+            video.currentTime =
+              0;
+
+
+            try {
+
+              await video.play();
+
+
+              /*
+               * Si entretanto el usuario
+               * encontró otra cita o terminó
+               * la experiencia, esta reproducción
+               * ya no debe controlar la interfaz.
+               */
+
+              if (
+                !experienciaActiva ||
+                generacionActual !== generacionVideo ||
+                targetActivo !== cita.target
+              ) {
+
+                return;
+              }
+
+            } catch (err) {
+
+              console.warn(
+                'No se pudo reproducir el video:',
+                err
+              );
+
+            }
+
           }
-        }
-      );
+        );
 
 
-      /* ---------- TARGET PERDIDO ---------- */
+        /* =====================================================
+           TARGET PERDIDO
+           ===================================================== */
 
-      el.addEventListener(
-        'targetLost',
-        () => {
+        el.addEventListener(
+          'targetLost',
+          () => {
 
-          /*
-           * Si este ya no es el target activo,
-           * no debe ocultar el video de otro target.
-           */
+            /*
+             * Evita que la pérdida de un target
+             * anterior cierre el video de otro.
+             */
 
-          if (targetActivo !== i) {
-            return;
+            if (
+              targetActivo !== cita.target
+            ) {
+
+              return;
+            }
+
+
+            targetActivo =
+              -1;
+
+
+            generacionVideo++;
+
+
+            detenerVideo();
+
+
+            if (experienciaActiva) {
+
+              instrucciones.style.display =
+                'flex';
+
+            }
+
           }
-
-          targetActivo = -1;
-
-          reproduccionGeneracion++;
-
-          detenerVideo();
-
-          if (experienciaActiva) {
-            instrucciones.style.display = 'flex';
-          }
-        }
-      );
+        );
 
 
-      targetsGroup.appendChild(el);
-    }
+        targetsGroup.appendChild(el);
+
+      }
+    );
 
 
     /* =========================================================
-       VIDEO REPRODUCIÉNDOSE
+       VIDEO COMENZÓ A REPRODUCIR
        ========================================================= */
 
     video.addEventListener(
@@ -610,15 +1041,19 @@
           return;
         }
 
+
         ocultarSpinner();
 
-        container.style.display = 'block';
+
+        container.style.display =
+          'block';
+
       }
     );
 
 
     /* =========================================================
-       ERROR DEL VIDEO
+       ERROR DE VIDEO
        ========================================================= */
 
     video.addEventListener(
@@ -627,10 +1062,12 @@
 
         ocultarSpinner();
 
+
         console.error(
-          'Error cargando el video:',
+          'Error cargando video:',
           video.error
         );
+
       }
     );
 
@@ -647,47 +1084,81 @@
           return;
         }
 
-        btnComenzar.disabled = true;
+
+        btnComenzar.disabled =
+          true;
+
 
         try {
 
           const mindarSystem =
-            sceneEl.systems['mindar-image-system'];
+            sceneEl.systems[
+              'mindar-image-system'
+            ];
+
 
           if (!mindarSystem) {
+
             throw new Error(
               'No se encontró el sistema de MindAR.'
             );
+
           }
 
-          experienciaActiva = true;
-          targetActivo = -1;
-          reproduccionGeneracion++;
+
+          experienciaActiva =
+            true;
+
+
+          targetActivo =
+            -1;
+
+
+          generacionVideo++;
+
 
           await mindarSystem.start();
 
-          inicio.style.display = 'none';
 
-          btnFlash.style.display = 'flex';
-          btnFinalizar.style.display = 'block';
-          instrucciones.style.display = 'flex';
+          inicio.style.display =
+            'none';
+
+
+          btnFlash.style.display =
+            'flex';
+
+
+          btnFinalizar.style.display =
+            'block';
+
+
+          instrucciones.style.display =
+            'flex';
+
 
         } catch (e) {
 
-          experienciaActiva = false;
+          experienciaActiva =
+            false;
+
 
           console.error(
             'Error al iniciar cámara:',
             e
           );
 
+
           alert(
-            "Error al iniciar cámara: " +
+            'Error al iniciar cámara: ' +
             (e.message || e)
           );
 
-          btnComenzar.disabled = false;
+
+          btnComenzar.disabled =
+            false;
+
         }
+
       }
     );
 
@@ -702,35 +1173,49 @@
         'click',
         () => {
 
-          reproduccionGeneracion++;
+          generacionVideo++;
+
 
           try {
             video.pause();
           } catch (e) {}
 
-          video.currentTime = 0;
 
-          container.style.display = 'none';
+          video.currentTime =
+            0;
+
+
+          container.style.display =
+            'none';
+
 
           ocultarSpinner();
 
+
           /*
-           * La cámara AR sigue funcionando.
-           * Solamente cerramos el video.
+           * IMPORTANTE:
+           * cerrar el video NO finaliza
+           * la experiencia AR.
+           *
+           * La cámara continúa funcionando.
            */
 
           if (
             experienciaActiva &&
             targetActivo !== -1
           ) {
-            instrucciones.style.display = 'none';
+
+            instrucciones.style.display =
+              'none';
+
           }
+
         }
       );
 
 
     /* =========================================================
-       SEGURIDAD AL CAMBIAR DE PÁGINA
+       LIMPIEZA AL SALIR DE LA PÁGINA
        ========================================================= */
 
     window.addEventListener(
@@ -741,22 +1226,30 @@
           await apagarLinterna();
         } catch (e) {}
 
+
         try {
 
           const mindarSystem =
-            sceneEl.systems['mindar-image-system'];
+            sceneEl.systems[
+              'mindar-image-system'
+            ];
+
 
           if (
             mindarSystem &&
             typeof mindarSystem.stop === 'function'
           ) {
+
             mindarSystem.stop();
+
           }
 
         } catch (e) {}
+
       }
     );
 
   </script>
+
 </body>
-</html>
+  </html>
