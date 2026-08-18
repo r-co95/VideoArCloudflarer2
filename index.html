@@ -10,28 +10,185 @@
 
   <style>
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
 
     /* ---------- Pantalla de inicio ---------- */
-    #inicio { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; }
-    #fondo-inicio { position: absolute; inset: 0; background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)), url('./fondo.jpg'); background-size: cover; background-position: center; filter: brightness(1.5); }
-    #contenedor-textos { position: absolute; bottom: 15vh; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
-    #inicio h1 { color: #fff; font-size: 32px; margin: 0; font-weight: 700; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    #btn-comenzar { border: 0; padding: 16px 40px; background: #2563eb; color: white; font-size: 18px; font-weight: 700; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-    #btn-comenzar:active { transform: scale(0.97); }
+    #inicio {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10000;
+      overflow: hidden;
+    }
+
+    #fondo-inicio {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2)),
+        url('./fondo.jpg');
+      background-size: cover;
+      background-position: center;
+      filter: brightness(1.5);
+    }
+
+    #contenedor-textos {
+      position: absolute;
+      bottom: 15vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    #inicio h1 {
+      color: #fff;
+      font-size: 32px;
+      margin: 0;
+      font-weight: 700;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    #btn-comenzar {
+      border: 0;
+      padding: 16px 40px;
+      background: #2563eb;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    #btn-comenzar:active {
+      transform: scale(0.97);
+    }
 
     /* ---------- UI de Cámara ---------- */
-    #instrucciones { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 4998; background: rgba(0, 0, 0, 0.65); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; display: none; text-align: center; max-width: 85vw; }
-    #btn-flash { position: fixed; top: 20px; left: 20px; z-index: 4999; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; border-radius: 50%; width: 44px; height: 44px; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: background 0.2s; }
-    #btn-finalizar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 4999; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-    
+    #instrucciones {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4998;
+      background: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+      text-align: center;
+      max-width: 85vw;
+    }
+
+    #btn-flash {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 4999;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: background 0.2s;
+    }
+
+    #btn-finalizar {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4999;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid #fff;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
     /* ---------- Spinner y Video ---------- */
-    #loading-spinner { position: fixed; inset: 0; z-index: 5002; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.35); }
-    .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: girar 0.8s linear infinite; }
-    @keyframes girar { to { transform: rotate(360deg); } }
-    #video-container { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 5000; display: none; background: #000; }
-    #video-pantalla { width: 100%; height: 100%; object-fit: cover; }
-    #btn-cerrar { position: absolute; top: 20px; right: 20px; z-index: 5001; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; border-radius: 50%; width: 44px; height: 44px; font-size: 22px; cursor: pointer; }
+    #loading-spinner {
+      position: fixed;
+      inset: 0;
+      z-index: 5002;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: girar 0.8s linear infinite;
+    }
+
+    @keyframes girar {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #video-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 5000;
+      display: none;
+      background: #000;
+    }
+
+    #video-pantalla {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #btn-cerrar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 5001;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -39,25 +196,51 @@
 
   <div id="inicio">
     <div id="fondo-inicio"></div>
+
     <div id="contenedor-textos">
       <h1>Jorge & Astrid</h1>
       <button id="btn-comenzar">Comenzar Experiencia</button>
     </div>
   </div>
 
-  <div id="instrucciones">Apunta la cámara hacia la foto 📸</div>
+  <div id="instrucciones">
+    Apunta la cámara hacia la foto 📸
+  </div>
+
   <button id="btn-flash">🔦</button>
-  <button id="btn-finalizar">Finalizar</button>
-  <div id="loading-spinner"><div class="spinner"></div></div>
+
+  <button id="btn-finalizar">
+    Finalizar
+  </button>
+
+  <div id="loading-spinner">
+    <div class="spinner"></div>
+  </div>
 
   <div id="video-container">
     <button id="btn-cerrar">&times;</button>
-    <video id="video-pantalla" playsinline loop preload="auto"></video>
+    <video
+      id="video-pantalla"
+      playsinline
+      loop
+      preload="auto">
+    </video>
   </div>
 
-  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;" color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false">
+    </a-camera>
+
     <a-entity id="targets-group"></a-entity>
+
   </a-scene>
 
   <script>
@@ -72,84 +255,508 @@
     const instrucciones = document.getElementById('instrucciones');
     const loadingSpinner = document.getElementById('loading-spinner');
 
-    let videoActual = null;
-    let flashEncendido = false;
     const NUM_TARGETS = 10;
 
-    function mostrarSpinner() { loadingSpinner.style.display = 'flex'; }
-    function ocultarSpinner() { loadingSpinner.style.display = 'none'; }
-    
-    function obtenerTrackCamara() {
-      const mindarSystem = sceneEl.systems['mindar-image-system'];
-      return mindarSystem?.video?.srcObject?.getVideoTracks()[0];
+    let flashEncendido = false;
+    let experienciaActiva = false;
+    let targetActivo = -1;
+    let reproduccionGeneracion = 0;
+
+
+    /* =========================================================
+       SPINNER
+       ========================================================= */
+
+    function mostrarSpinner() {
+      loadingSpinner.style.display = 'flex';
     }
+
+    function ocultarSpinner() {
+      loadingSpinner.style.display = 'none';
+    }
+
+
+    /* =========================================================
+       CÁMARA
+       ========================================================= */
+
+    function obtenerTrackCamara() {
+      const mindarSystem =
+        sceneEl.systems['mindar-image-system'];
+
+      if (!mindarSystem) {
+        return null;
+      }
+
+      const videoMindAR = mindarSystem.video;
+
+      if (!videoMindAR || !videoMindAR.srcObject) {
+        return null;
+      }
+
+      const tracks =
+        videoMindAR.srcObject.getVideoTracks();
+
+      return tracks && tracks.length
+        ? tracks[0]
+        : null;
+    }
+
+
+    /* =========================================================
+       LINTERNА
+       ========================================================= */
 
     btnFlash.addEventListener('click', async () => {
+
       const track = obtenerTrackCamara();
-      if (!track) return;
+
+      if (!track) {
+        console.warn('No se encontró el track de cámara.');
+        return;
+      }
+
       try {
-        const capabilities = (typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
-        if (!capabilities || !capabilities.torch) return;
-        flashEncendido = !flashEncendido;
-        await track.applyConstraints({ advanced: [{ torch: flashEncendido }] });
-        btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0, 0, 0, 0.7)';
-      } catch (err) { console.error('Error linterna:', err); }
-    });
 
-    btnFinalizar.addEventListener('click', () => {
-      inicio.style.display = 'flex';
-      btnFlash.style.display = 'none';
-      btnFinalizar.style.display = 'none';
-      instrucciones.style.display = 'none';
-      container.style.display = 'none';
-      video.pause();
-      video.currentTime = 0;
-      btnComenzar.disabled = false;
-    });
+        const capabilities =
+          typeof track.getCapabilities === 'function'
+            ? track.getCapabilities()
+            : null;
 
-    for (let i = 0; i < NUM_TARGETS; i++) {
-      const el = document.createElement('a-entity');
-      el.setAttribute('mindar-image-target', `targetIndex: ${i}`);
-      el.addEventListener('targetFound', async () => {
-        instrucciones.style.display = 'none';
-        mostrarSpinner();
-        const rutaVideo = `https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/Cita${String(i + 1).padStart(3, '0')}.mp4`;
-        if (video.src !== rutaVideo && video.src !== window.location.href + rutaVideo) {
-          video.src = rutaVideo;
-          video.currentTime = 0;
+        if (!capabilities || !capabilities.torch) {
+          console.warn('La cámara no ofrece control de linterna.');
+          return;
         }
-        video.play().catch(()=>{});
-      });
-      el.addEventListener('targetLost', () => {
-        video.pause();
-        container.style.display = 'none';
-        instrucciones.style.display = 'flex';
-        ocultarSpinner();
-      });
-      targetsGroup.appendChild(el);
-    }
 
-    video.addEventListener('playing', () => { ocultarSpinner(); container.style.display = 'block'; });
+        const nuevoEstado = !flashEncendido;
 
-    btnComenzar.addEventListener('click', async () => {
-      btnComenzar.disabled = true;
-      try {
-        await sceneEl.systems['mindar-image-system'].start();
-        inicio.style.display = 'none';
-        btnFlash.style.display = 'flex';
-        btnFinalizar.style.display = 'block';
-        instrucciones.style.display = 'flex';
-      } catch (e) {
-        alert("Error al iniciar cámara: " + e.message);
-        btnComenzar.disabled = false;
+        await track.applyConstraints({
+          advanced: [
+            {
+              torch: nuevoEstado
+            }
+          ]
+        });
+
+        flashEncendido = nuevoEstado;
+
+        btnFlash.style.background =
+          flashEncendido
+            ? '#facc15'
+            : 'rgba(0, 0, 0, 0.7)';
+
+      } catch (err) {
+
+        console.error(
+          'Error al controlar la linterna:',
+          err
+        );
+
       }
     });
 
-    document.getElementById('btn-cerrar').addEventListener('click', () => {
-      video.pause();
-      video.currentTime = 0;
+
+    /* =========================================================
+       REINICIAR VIDEO
+       ========================================================= */
+
+    function detenerVideo() {
+
+      try {
+        video.pause();
+      } catch (e) {}
+
+      video.removeAttribute('src');
+
+      try {
+        video.load();
+      } catch (e) {}
+
       container.style.display = 'none';
+
+      ocultarSpinner();
+    }
+
+
+    /* =========================================================
+       APAGAR LINTERNA
+       ========================================================= */
+
+    async function apagarLinterna() {
+
+      if (!flashEncendido) {
+        return;
+      }
+
+      const track = obtenerTrackCamara();
+
+      if (!track) {
+        flashEncendido = false;
+        btnFlash.style.background =
+          'rgba(0, 0, 0, 0.7)';
+        return;
+      }
+
+      try {
+
+        const capabilities =
+          typeof track.getCapabilities === 'function'
+            ? track.getCapabilities()
+            : null;
+
+        if (capabilities && capabilities.torch) {
+
+          await track.applyConstraints({
+            advanced: [
+              {
+                torch: false
+              }
+            ]
+          });
+        }
+
+      } catch (err) {
+
+        console.warn(
+          'No se pudo apagar la linterna:',
+          err
+        );
+
+      }
+
+      flashEncendido = false;
+
+      btnFlash.style.background =
+        'rgba(0, 0, 0, 0.7)';
+    }
+
+
+    /* =========================================================
+       FINALIZAR EXPERIENCIA
+       ========================================================= */
+
+    btnFinalizar.addEventListener('click', async () => {
+
+      experienciaActiva = false;
+      targetActivo = -1;
+      reproduccionGeneracion++;
+
+      detenerVideo();
+
+      await apagarLinterna();
+
+      btnFlash.style.display = 'none';
+      btnFinalizar.style.display = 'none';
+      instrucciones.style.display = 'none';
+
+      inicio.style.display = 'flex';
+
+      btnComenzar.disabled = false;
+
+      /*
+       * Se intenta detener MindAR si dispone
+       * del método correspondiente.
+       */
+      try {
+
+        const mindarSystem =
+          sceneEl.systems['mindar-image-system'];
+
+        if (
+          mindarSystem &&
+          typeof mindarSystem.stop === 'function'
+        ) {
+          mindarSystem.stop();
+        }
+
+      } catch (err) {
+
+        console.warn(
+          'No fue posible detener MindAR:',
+          err
+        );
+
+      }
     });
+
+
+    /* =========================================================
+       CREACIÓN DE TARGETS
+       ========================================================= */
+
+    for (let i = 0; i < NUM_TARGETS; i++) {
+
+      const el = document.createElement('a-entity');
+
+      el.setAttribute(
+        'mindar-image-target',
+        `targetIndex: ${i}`
+      );
+
+
+      /* ---------- TARGET ENCONTRADO ---------- */
+
+      el.addEventListener(
+        'targetFound',
+        async () => {
+
+          if (!experienciaActiva) {
+            return;
+          }
+
+          targetActivo = i;
+
+          const generacionActual =
+            ++reproduccionGeneracion;
+
+          instrucciones.style.display = 'none';
+
+          mostrarSpinner();
+
+          const rutaVideo =
+            `https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/Cita${String(i + 1).padStart(3, '0')}.mp4`;
+
+
+          /*
+           * Siempre detenemos correctamente el video anterior
+           * antes de cargar el nuevo.
+           */
+
+          try {
+            video.pause();
+          } catch (e) {}
+
+
+          video.src = rutaVideo;
+
+          video.currentTime = 0;
+
+
+          try {
+
+            await video.play();
+
+            /*
+             * Si durante la carga cambió el target,
+             * esta reproducción ya no debe controlar
+             * la interfaz.
+             */
+
+            if (
+              !experienciaActiva ||
+              generacionActual !== reproduccionGeneracion ||
+              targetActivo !== i
+            ) {
+              return;
+            }
+
+          } catch (err) {
+
+            /*
+             * El navegador puede bloquear temporalmente
+             * la reproducción. No rompemos la experiencia.
+             */
+
+            console.warn(
+              'No se pudo reproducir el video automáticamente:',
+              err
+            );
+          }
+        }
+      );
+
+
+      /* ---------- TARGET PERDIDO ---------- */
+
+      el.addEventListener(
+        'targetLost',
+        () => {
+
+          /*
+           * Si este ya no es el target activo,
+           * no debe ocultar el video de otro target.
+           */
+
+          if (targetActivo !== i) {
+            return;
+          }
+
+          targetActivo = -1;
+
+          reproduccionGeneracion++;
+
+          detenerVideo();
+
+          if (experienciaActiva) {
+            instrucciones.style.display = 'flex';
+          }
+        }
+      );
+
+
+      targetsGroup.appendChild(el);
+    }
+
+
+    /* =========================================================
+       VIDEO REPRODUCIÉNDOSE
+       ========================================================= */
+
+    video.addEventListener(
+      'playing',
+      () => {
+
+        if (!experienciaActiva) {
+          return;
+        }
+
+        ocultarSpinner();
+
+        container.style.display = 'block';
+      }
+    );
+
+
+    /* =========================================================
+       ERROR DEL VIDEO
+       ========================================================= */
+
+    video.addEventListener(
+      'error',
+      () => {
+
+        ocultarSpinner();
+
+        console.error(
+          'Error cargando el video:',
+          video.error
+        );
+      }
+    );
+
+
+    /* =========================================================
+       COMENZAR EXPERIENCIA
+       ========================================================= */
+
+    btnComenzar.addEventListener(
+      'click',
+      async () => {
+
+        if (experienciaActiva) {
+          return;
+        }
+
+        btnComenzar.disabled = true;
+
+        try {
+
+          const mindarSystem =
+            sceneEl.systems['mindar-image-system'];
+
+          if (!mindarSystem) {
+            throw new Error(
+              'No se encontró el sistema de MindAR.'
+            );
+          }
+
+          experienciaActiva = true;
+          targetActivo = -1;
+          reproduccionGeneracion++;
+
+          await mindarSystem.start();
+
+          inicio.style.display = 'none';
+
+          btnFlash.style.display = 'flex';
+          btnFinalizar.style.display = 'block';
+          instrucciones.style.display = 'flex';
+
+        } catch (e) {
+
+          experienciaActiva = false;
+
+          console.error(
+            'Error al iniciar cámara:',
+            e
+          );
+
+          alert(
+            "Error al iniciar cámara: " +
+            (e.message || e)
+          );
+
+          btnComenzar.disabled = false;
+        }
+      }
+    );
+
+
+    /* =========================================================
+       CERRAR VIDEO
+       ========================================================= */
+
+    document
+      .getElementById('btn-cerrar')
+      .addEventListener(
+        'click',
+        () => {
+
+          reproduccionGeneracion++;
+
+          try {
+            video.pause();
+          } catch (e) {}
+
+          video.currentTime = 0;
+
+          container.style.display = 'none';
+
+          ocultarSpinner();
+
+          /*
+           * La cámara AR sigue funcionando.
+           * Solamente cerramos el video.
+           */
+
+          if (
+            experienciaActiva &&
+            targetActivo !== -1
+          ) {
+            instrucciones.style.display = 'none';
+          }
+        }
+      );
+
+
+    /* =========================================================
+       SEGURIDAD AL CAMBIAR DE PÁGINA
+       ========================================================= */
+
+    window.addEventListener(
+      'pagehide',
+      async () => {
+
+        try {
+          await apagarLinterna();
+        } catch (e) {}
+
+        try {
+
+          const mindarSystem =
+            sceneEl.systems['mindar-image-system'];
+
+          if (
+            mindarSystem &&
+            typeof mindarSystem.stop === 'function'
+          ) {
+            mindarSystem.stop();
+          }
+
+        } catch (e) {}
+      }
+    );
+
   </script>
 </body>
 </html>
