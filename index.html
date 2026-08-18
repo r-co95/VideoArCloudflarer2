@@ -103,6 +103,7 @@
       instrucciones.style.display = 'none';
       container.style.display = 'none';
       video.pause();
+      video.currentTime = 0;
       btnComenzar.disabled = false;
     });
 
@@ -113,7 +114,10 @@
         instrucciones.style.display = 'none';
         mostrarSpinner();
         const rutaVideo = `https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/Cita${String(i + 1).padStart(3, '0')}.mp4`;
-        video.src = rutaVideo;
+        if (video.src !== rutaVideo && video.src !== window.location.href + rutaVideo) {
+          video.src = rutaVideo;
+          video.currentTime = 0;
+        }
         video.play().catch(()=>{});
       });
       el.addEventListener('targetLost', () => {
@@ -143,6 +147,7 @@
 
     document.getElementById('btn-cerrar').addEventListener('click', () => {
       video.pause();
+      video.currentTime = 0;
       container.style.display = 'none';
     });
   </script>
