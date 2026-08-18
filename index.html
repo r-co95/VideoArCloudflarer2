@@ -23,6 +23,7 @@
     /* ---------- UI de Cámara ---------- */
     #instrucciones { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); z-index: 4998; background: rgba(0, 0, 0, 0.65); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; display: none; text-align: center; max-width: 85vw; }
     #btn-flash { position: fixed; top: 20px; left: 20px; z-index: 4999; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; border-radius: 50%; width: 44px; height: 44px; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: background 0.2s; }
+    #btn-finalizar { position: fixed; top: 20px; right: 20px; z-index: 4999; background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
     
     /* ---------- Spinner y Video ---------- */
     #loading-spinner { position: fixed; inset: 0; z-index: 5002; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.35); }
@@ -46,6 +47,7 @@
 
   <div id="instrucciones">Apunta la cámara hacia la foto 📸</div>
   <button id="btn-flash">🔦</button>
+  <button id="btn-finalizar">Finalizar</button>
   <div id="loading-spinner"><div class="spinner"></div></div>
 
   <div id="video-container">
@@ -63,6 +65,7 @@
     const container = document.getElementById('video-container');
     const video = document.getElementById('video-pantalla');
     const btnFlash = document.getElementById('btn-flash');
+    const btnFinalizar = document.getElementById('btn-finalizar');
     const targetsGroup = document.getElementById('targets-group');
     const sceneEl = document.querySelector('a-scene');
     const btnComenzar = document.getElementById('btn-comenzar');
@@ -73,7 +76,6 @@
     let flashEncendido = false;
     const NUM_TARGETS = 10;
 
-    // --- Funciones auxiliares ---
     function mostrarSpinner() { loadingSpinner.style.display = 'flex'; }
     function ocultarSpinner() { loadingSpinner.style.display = 'none'; }
     
@@ -82,30 +84,35 @@
       return mindarSystem?.video?.srcObject?.getVideoTracks()[0];
     }
 
-    // --- Lógica de Linterna (Funcionando en Android) ---
     btnFlash.addEventListener('click', async () => {
       const track = obtenerTrackCamara();
       if (!track) return;
-      
       try {
         const capabilities = (typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
         if (!capabilities || !capabilities.torch) return;
-
         flashEncendido = !flashEncendido;
         await track.applyConstraints({ advanced: [{ torch: flashEncendido }] });
         btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0, 0, 0, 0.7)';
       } catch (err) { console.error('Error linterna:', err); }
     });
 
-    // --- Lógica de targets ---
+    // Nueva lógica: Finalizar
+    btnFinalizar.addEventListener('click', () => {
+      inicio.style.display = 'flex';
+      btnFlash.style.display = 'none';
+      btnFinalizar.style.display = 'none';
+      instrucciones.style.display = 'none';
+      container.style.display = 'none';
+      video.pause();
+      btnComenzar.disabled = false;
+    });
+
     for (let i = 0; i < NUM_TARGETS; i++) {
       const el = document.createElement('a-entity');
       el.setAttribute('mindar-image-target', `targetIndex: ${i}`);
       el.addEventListener('targetFound', async () => {
         instrucciones.style.display = 'none';
         mostrarSpinner();
-        
-        // Aquí puedes poner tu lógica de búsqueda de video
         const rutaVideo = `https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/Cita${String(i + 1).padStart(3, '0')}.mp4`;
         video.src = rutaVideo;
         video.play().catch(()=>{});
@@ -121,13 +128,13 @@
 
     video.addEventListener('playing', () => { ocultarSpinner(); container.style.display = 'block'; });
 
-    // --- Inicio ---
     btnComenzar.addEventListener('click', async () => {
       btnComenzar.disabled = true;
       try {
         await sceneEl.systems['mindar-image-system'].start();
         inicio.style.display = 'none';
         btnFlash.style.display = 'flex';
+        btnFinalizar.style.display = 'block';
         instrucciones.style.display = 'flex';
       } catch (e) {
         alert("Error al iniciar cámara: " + e.message);
