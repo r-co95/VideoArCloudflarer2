@@ -13,10 +13,8 @@
 
   <title>Jorge & Astrid</title>
 
-  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
-  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
@@ -40,9 +38,7 @@
         sans-serif;
     }
 
-    /* =========================================================
-       PANTALLA DE INICIO
-       ========================================================= */
+    /* ---------- Pantalla de inicio ---------- */
 
     #inicio {
       position: fixed;
@@ -115,14 +111,10 @@
       transform: scale(0.97);
     }
 
-
-    /* =========================================================
-       UI DE CÁMARA
-       ========================================================= */
+    /* ---------- UI de Cámara ---------- */
 
     #instrucciones {
       position: fixed;
-
       top: 30px;
       left: 50%;
 
@@ -143,14 +135,8 @@
       display: none;
 
       text-align: center;
-
       max-width: 85vw;
     }
-
-
-    /* =========================================================
-       BOTÓN LINTERNA
-       ========================================================= */
 
     #btn-flash {
       position: fixed;
@@ -186,11 +172,6 @@
         background 0.2s;
     }
 
-
-    /* =========================================================
-       BOTÓN FINALIZAR
-       ========================================================= */
-
     #btn-finalizar {
       position: fixed;
 
@@ -221,10 +202,7 @@
         0 4px 12px rgba(0,0,0,0.4);
     }
 
-
-    /* =========================================================
-       SPINNER
-       ========================================================= */
+    /* ---------- Spinner ---------- */
 
     #loading-spinner {
       position: fixed;
@@ -262,10 +240,7 @@
       }
     }
 
-
-    /* =========================================================
-       VIDEO
-       ========================================================= */
+    /* ---------- Video ---------- */
 
     #video-container {
       position: fixed;
@@ -288,11 +263,6 @@
 
       object-fit: cover;
     }
-
-
-    /* =========================================================
-       BOTÓN CERRAR VIDEO
-       ========================================================= */
 
     #btn-cerrar {
       position: absolute;
@@ -319,13 +289,11 @@
   </style>
 </head>
 
-
 <body>
 
-
-  <!-- =======================================================
+  <!-- ======================================================
        PANTALLA INICIAL
-       ======================================================= -->
+       ====================================================== -->
 
   <div id="inicio">
 
@@ -333,9 +301,7 @@
 
     <div id="contenedor-textos">
 
-      <h1>
-        Jorge & Astrid
-      </h1>
+      <h1>Jorge & Astrid</h1>
 
       <button id="btn-comenzar">
         Comenzar Experiencia
@@ -346,9 +312,9 @@
   </div>
 
 
-  <!-- =======================================================
-       INTERFAZ CÁMARA
-       ======================================================= -->
+  <!-- ======================================================
+       CONTROLES
+       ====================================================== -->
 
   <div id="instrucciones">
     Apunta la cámara hacia la foto 📸
@@ -363,18 +329,18 @@
   </button>
 
 
-  <!-- =======================================================
-       LOADING
-       ======================================================= -->
+  <!-- ======================================================
+       SPINNER
+       ====================================================== -->
 
   <div id="loading-spinner">
     <div class="spinner"></div>
   </div>
 
 
-  <!-- =======================================================
+  <!-- ======================================================
        VIDEO
-       ======================================================= -->
+       ====================================================== -->
 
   <div id="video-container">
 
@@ -392,9 +358,9 @@
   </div>
 
 
-  <!-- =======================================================
+  <!-- ======================================================
        MINDAR
-       ======================================================= -->
+       ====================================================== -->
 
   <a-scene
     mindar-image="
@@ -421,9 +387,9 @@
 
   <script>
 
-    /* =========================================================
+    /* ======================================================
        ELEMENTOS
-       ========================================================= */
+       ====================================================== */
 
     const inicio =
       document.getElementById('inicio');
@@ -456,58 +422,46 @@
       document.getElementById('loading-spinner');
 
 
-    /* =========================================================
+    /* ======================================================
        CONFIGURACIÓN DE LAS CITAS
-       =========================================================
+       ======================================================
 
-       AQUÍ SE AGREGAN LAS CITAS QUE YA EXISTAN.
+       Actualmente tiene 2 targets.
 
-       No es necesario tener las 100 todavía.
+       TARGET 0 = Cita001.mp4
+       TARGET 1 = Cita002.mp4
 
-       Ejemplo:
+       Para agregar la tercera:
 
-       target 0 = Cita 001
-       target 1 = Cita 002
-       target 2 = Cita 003
+       { target: 2 }
 
-       Cuando tenga la cita 4 simplemente agrega:
+       Para la cuarta:
 
        { target: 3 }
 
-       El sistema generará automáticamente:
+       ...
 
-       Cita004.mp4
+       Para la Cita 100:
 
-       ========================================================= */
+       { target: 99 }
+
+       ====================================================== */
 
     const CITAS = [
-
       { target: 0 },
+      { target: 1 }
 
-      /*
-      { target: 1 },
-      { target: 2 },
-      { target: 3 },
-      { target: 4 },
-      { target: 5 },
-      { target: 6 },
-      { target: 7 },
-      { target: 8 },
-      { target: 9 },
-
-      ...
-      
-      Hasta:
-
-      { target: 99 }
-
-      */
+      // { target: 2 },
+      // { target: 3 },
+      // { target: 4 },
+      // ...
+      // { target: 99 }
     ];
 
 
-    /* =========================================================
-       CONFIGURACIÓN GENERAL
-       ========================================================= */
+    /* ======================================================
+       CONFIGURACIÓN
+       ====================================================== */
 
     const TOTAL_CITAS_MAXIMO = 100;
 
@@ -515,22 +469,56 @@
       'https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/';
 
 
-    /* =========================================================
+    /* ======================================================
        ESTADO
-       ========================================================= */
+       ====================================================== */
 
     let flashEncendido = false;
 
     let experienciaActiva = false;
 
+    /*
+     * Target que actualmente está siendo reconocido.
+     */
     let targetActivo = -1;
 
+    /*
+     * Video que actualmente está cargado.
+     */
+    let videoTargetActual = -1;
+
+    /*
+     * Sirve para invalidar reproducciones anteriores
+     * cuando realmente cambiamos de target o finalizamos.
+     */
     let generacionVideo = 0;
 
 
-    /* =========================================================
+    /*
+     * Guarda la posición de cada cita.
+
+     * Ejemplo:
+
+     * posicionesVideo[0] = 17.43
+     * posicionesVideo[1] = 52.12
+     *
+     * Esto permite que cada cita conserve
+     * su propio punto de reproducción.
+     */
+    const posicionesVideo = {};
+
+
+    /*
+     * Indica qué citas ya fueron cargadas.
+     *
+     * No necesitamos cargar los 100 videos.
+     */
+    const videosCargados = {};
+
+
+    /* ======================================================
        SPINNER
-       ========================================================= */
+       ====================================================== */
 
     function mostrarSpinner() {
 
@@ -548,9 +536,9 @@
     }
 
 
-    /* =========================================================
-       OBTENER CÁMARA
-       ========================================================= */
+    /* ======================================================
+       OBTENER TRACK DE CÁMARA
+       ====================================================== */
 
     function obtenerTrackCamara() {
 
@@ -586,9 +574,9 @@
     }
 
 
-    /* =========================================================
+    /* ======================================================
        LINTERNA
-       ========================================================= */
+       ====================================================== */
 
     btnFlash.addEventListener(
       'click',
@@ -598,14 +586,8 @@
           obtenerTrackCamara();
 
         if (!track) {
-
-          console.warn(
-            'No se encontró el track de cámara.'
-          );
-
           return;
         }
-
 
         try {
 
@@ -619,11 +601,6 @@
             !capabilities ||
             !capabilities.torch
           ) {
-
-            console.warn(
-              'La cámara no permite controlar la linterna.'
-            );
-
             return;
           }
 
@@ -633,13 +610,11 @@
 
 
           await track.applyConstraints({
-
             advanced: [
               {
                 torch: nuevoEstado
               }
             ]
-
           });
 
 
@@ -666,9 +641,9 @@
     );
 
 
-    /* =========================================================
+    /* ======================================================
        APAGAR LINTERNA
-       ========================================================= */
+       ====================================================== */
 
     async function apagarLinterna() {
 
@@ -697,13 +672,11 @@
           ) {
 
             await track.applyConstraints({
-
               advanced: [
                 {
                   torch: false
                 }
               ]
-
             });
 
           }
@@ -720,7 +693,8 @@
       }
 
 
-      flashEncendido = false;
+      flashEncendido =
+        false;
 
 
       btnFlash.style.background =
@@ -729,11 +703,68 @@
     }
 
 
-    /* =========================================================
-       DETENER VIDEO
-       ========================================================= */
+    /* ======================================================
+       PAUSAR Y OCULTAR VIDEO
+       ======================================================
 
-    function detenerVideo() {
+       IMPORTANTE:
+
+       Esta función NO elimina:
+
+       - src
+       - currentTime
+       - video cargado
+
+       Por eso al volver a detectar la imagen
+       el video puede continuar.
+
+       ====================================================== */
+
+    function pausarYOcultarVideo() {
+
+      try {
+
+        /*
+         * Guardamos la posición actual
+         * antes de pausar.
+         */
+
+        if (
+          videoTargetActual >= 0 &&
+          !isNaN(video.currentTime)
+        ) {
+
+          posicionesVideo[
+            videoTargetActual
+          ] = video.currentTime;
+
+        }
+
+
+        video.pause();
+
+      } catch (e) {}
+
+
+      container.style.display =
+        'none';
+
+
+      ocultarSpinner();
+
+    }
+
+
+    /* ======================================================
+       REINICIAR COMPLETAMENTE EL VIDEO
+       ======================================================
+
+       Esta función SOLO se utiliza cuando realmente
+       queremos cambiar de video o finalizar.
+
+       ====================================================== */
+
+    function limpiarVideoCompleto() {
 
       try {
         video.pause();
@@ -748,6 +779,10 @@
       } catch (e) {}
 
 
+      videoTargetActual =
+        -1;
+
+
       container.style.display =
         'none';
 
@@ -757,28 +792,206 @@
     }
 
 
-    /* =========================================================
-       GENERAR NOMBRE DEL VIDEO
-       ========================================================= */
+    /* ======================================================
+       RUTA DEL VIDEO
+       ====================================================== */
 
     function obtenerRutaVideo(numeroCita) {
 
-      const numeroFormateado =
+      const numero =
         String(numeroCita)
           .padStart(3, '0');
 
 
       return (
         BASE_VIDEO +
-        `Cita${numeroFormateado}.mp4`
+        `Cita${numero}.mp4`
       );
 
     }
 
 
-    /* =========================================================
+    /* ======================================================
+       CARGAR / CONTINUAR VIDEO
+       ====================================================== */
+
+    async function reproducirCita(
+      targetIndex
+    ) {
+
+      const numeroCita =
+        targetIndex + 1;
+
+
+      const rutaVideo =
+        obtenerRutaVideo(
+          numeroCita
+        );
+
+
+      /*
+       * Si ya estamos reproduciendo
+       * exactamente este target,
+       * no hacemos nada.
+       */
+
+      if (
+        videoTargetActual === targetIndex &&
+        video.src === rutaVideo
+      ) {
+
+        try {
+          await video.play();
+        } catch (e) {}
+
+        return;
+      }
+
+
+      /*
+       * Si veníamos de otro target,
+       * guardamos la posición del anterior.
+       */
+
+      if (
+        videoTargetActual >= 0 &&
+        !isNaN(video.currentTime)
+      ) {
+
+        posicionesVideo[
+          videoTargetActual
+        ] = video.currentTime;
+
+      }
+
+
+      /*
+       * Pausamos el video anterior,
+       * pero solo ahora que realmente
+       * vamos a cambiar a otro video.
+       */
+
+      try {
+        video.pause();
+      } catch (e) {}
+
+
+      videoTargetActual =
+        targetIndex;
+
+
+      /*
+       * Cargamos el nuevo video.
+       */
+
+      video.src =
+        rutaVideo;
+
+
+      /*
+       * Si ya habíamos visto esta cita,
+       * recuperamos su posición.
+       *
+       * Si es la primera vez,
+       * comienza desde 0.
+       */
+
+      const posicionGuardada =
+        posicionesVideo[targetIndex];
+
+
+      if (
+        typeof posicionGuardada === 'number' &&
+        isFinite(posicionGuardada)
+      ) {
+
+        /*
+         * Esperamos a que el metadata
+         * esté disponible antes de colocar
+         * currentTime.
+         */
+
+        if (video.readyState >= 1) {
+
+          try {
+            video.currentTime =
+              posicionGuardada;
+          } catch (e) {}
+
+        } else {
+
+          await new Promise(
+            (resolve) => {
+
+              const colocarPosicion =
+                () => {
+
+                  try {
+                    video.currentTime =
+                      posicionGuardada;
+                  } catch (e) {}
+
+                  video.removeEventListener(
+                    'loadedmetadata',
+                    colocarPosicion
+                  );
+
+                  resolve();
+
+                };
+
+              video.addEventListener(
+                'loadedmetadata',
+                colocarPosicion,
+                { once: true }
+              );
+
+            }
+          );
+
+        }
+
+      } else {
+
+        try {
+          video.currentTime = 0;
+        } catch (e) {}
+
+      }
+
+
+      /*
+       * Guardamos que este video ya
+       * fue solicitado.
+       */
+
+      videosCargados[targetIndex] =
+        true;
+
+
+      /*
+       * Reproducimos.
+       */
+
+      try {
+
+        await video.play();
+
+      } catch (err) {
+
+        console.warn(
+          'No se pudo reproducir el video:',
+          err
+        );
+
+      }
+
+    }
+
+
+    /* ======================================================
        FINALIZAR EXPERIENCIA
-       ========================================================= */
+       ====================================================== */
 
     btnFinalizar.addEventListener(
       'click',
@@ -793,7 +1006,33 @@
         generacionVideo++;
 
 
-        detenerVideo();
+        /*
+         * Al finalizar sí reiniciamos
+         * completamente el video.
+         */
+
+        limpiarVideoCompleto();
+
+
+        /*
+         * Reiniciamos posiciones.
+         *
+         * Si vuelve a comenzar la experiencia,
+         * los videos comenzarán desde 0.
+         */
+
+        Object.keys(
+          posicionesVideo
+        ).forEach(
+          key => delete posicionesVideo[key]
+        );
+
+
+        Object.keys(
+          videosCargados
+        ).forEach(
+          key => delete videosCargados[key]
+        );
 
 
         await apagarLinterna();
@@ -816,6 +1055,10 @@
         btnComenzar.disabled =
           false;
 
+
+        /*
+         * Detener MindAR.
+         */
 
         try {
 
@@ -847,30 +1090,26 @@
     );
 
 
-    /* =========================================================
+    /* ======================================================
        CREAR TARGETS
-       =========================================================
-
-       IMPORTANTE:
-
-       Solo se crean los targets que están
-       actualmente incluidos en CITAS.
-
-       Por eso no importa que todavía
-       no tenga las 100 citas.
-
-       ========================================================= */
+       ====================================================== */
 
     CITAS.forEach(
       (cita) => {
 
+        /*
+         * Validación.
+         */
+
         if (
+          typeof cita.target !== 'number' ||
           cita.target < 0 ||
           cita.target >= TOTAL_CITAS_MAXIMO
         ) {
 
           console.warn(
-            `Target inválido: ${cita.target}`
+            'Target inválido:',
+            cita.target
           );
 
           return;
@@ -889,9 +1128,9 @@
         );
 
 
-        /* =====================================================
+        /* ==================================================
            TARGET ENCONTRADO
-           ===================================================== */
+           ================================================== */
 
         el.addEventListener(
           'targetFound',
@@ -918,62 +1157,29 @@
 
 
             /*
-             * target 0 = Cita001
-             * target 1 = Cita002
+             * Reproducir la cita.
              *
-             * Por eso usamos +1.
+             * Si ya había sido vista,
+             * continúa desde su posición.
              */
 
-            const numeroCita =
-              cita.target + 1;
+            await reproducirCita(
+              cita.target
+            );
 
 
-            const rutaVideo =
-              obtenerRutaVideo(
-                numeroCita
-              );
+            /*
+             * Verificamos que todavía
+             * corresponda al target actual.
+             */
 
+            if (
+              !experienciaActiva ||
+              generacionActual !== generacionVideo ||
+              targetActivo !== cita.target
+            ) {
 
-            try {
-              video.pause();
-            } catch (e) {}
-
-
-            video.src =
-              rutaVideo;
-
-
-            video.currentTime =
-              0;
-
-
-            try {
-
-              await video.play();
-
-
-              /*
-               * Si entretanto el usuario
-               * encontró otra cita o terminó
-               * la experiencia, esta reproducción
-               * ya no debe controlar la interfaz.
-               */
-
-              if (
-                !experienciaActiva ||
-                generacionActual !== generacionVideo ||
-                targetActivo !== cita.target
-              ) {
-
-                return;
-              }
-
-            } catch (err) {
-
-              console.warn(
-                'No se pudo reproducir el video:',
-                err
-              );
+              return;
 
             }
 
@@ -981,17 +1187,19 @@
         );
 
 
-        /* =====================================================
+        /* ==================================================
            TARGET PERDIDO
-           ===================================================== */
+           ================================================== */
 
         el.addEventListener(
           'targetLost',
           () => {
 
             /*
-             * Evita que la pérdida de un target
-             * anterior cierre el video de otro.
+             * MUY IMPORTANTE:
+             *
+             * Solo actuamos si este era
+             * realmente el target activo.
              */
 
             if (
@@ -999,6 +1207,7 @@
             ) {
 
               return;
+
             }
 
 
@@ -1009,7 +1218,19 @@
             generacionVideo++;
 
 
-            detenerVideo();
+            /*
+             * SOLO PAUSAMOS Y OCULTAMOS.
+             *
+             * NO:
+             * - borramos src
+             * - hacemos load()
+             * - ponemos currentTime = 0
+             *
+             * Esto permite continuar el video
+             * exactamente donde quedó.
+             */
+
+            pausarYOcultarVideo();
 
 
             if (experienciaActiva) {
@@ -1023,15 +1244,17 @@
         );
 
 
-        targetsGroup.appendChild(el);
+        targetsGroup.appendChild(
+          el
+        );
 
       }
     );
 
 
-    /* =========================================================
+    /* ======================================================
        VIDEO COMENZÓ A REPRODUCIR
-       ========================================================= */
+       ====================================================== */
 
     video.addEventListener(
       'playing',
@@ -1052,9 +1275,39 @@
     );
 
 
-    /* =========================================================
+    /* ======================================================
+       ACTUALIZAR POSICIÓN
+       ======================================================
+
+       Guardamos continuamente la posición
+       para que incluso si se pierde el target
+       de forma abrupta, tengamos la última
+       posición conocida.
+
+       ====================================================== */
+
+    video.addEventListener(
+      'timeupdate',
+      () => {
+
+        if (
+          videoTargetActual >= 0 &&
+          !isNaN(video.currentTime)
+        ) {
+
+          posicionesVideo[
+            videoTargetActual
+          ] = video.currentTime;
+
+        }
+
+      }
+    );
+
+
+    /* ======================================================
        ERROR DE VIDEO
-       ========================================================= */
+       ====================================================== */
 
     video.addEventListener(
       'error',
@@ -1072,9 +1325,9 @@
     );
 
 
-    /* =========================================================
+    /* ======================================================
        COMENZAR EXPERIENCIA
-       ========================================================= */
+       ====================================================== */
 
     btnComenzar.addEventListener(
       'click',
@@ -1163,9 +1416,17 @@
     );
 
 
-    /* =========================================================
+    /* ======================================================
        CERRAR VIDEO
-       ========================================================= */
+       ======================================================
+
+       El botón X NO reinicia la cita.
+
+       Conserva currentTime y src para que,
+       si vuelve a escanear el target,
+       continúe desde donde estaba.
+
+       ====================================================== */
 
     document
       .getElementById('btn-cerrar')
@@ -1176,13 +1437,29 @@
           generacionVideo++;
 
 
+          /*
+           * Guardar posición.
+           */
+
+          if (
+            videoTargetActual >= 0 &&
+            !isNaN(video.currentTime)
+          ) {
+
+            posicionesVideo[
+              videoTargetActual
+            ] = video.currentTime;
+
+          }
+
+
+          /*
+           * Pausar sin destruir.
+           */
+
           try {
             video.pause();
           } catch (e) {}
-
-
-          video.currentTime =
-            0;
 
 
           container.style.display =
@@ -1193,11 +1470,7 @@
 
 
           /*
-           * IMPORTANTE:
-           * cerrar el video NO finaliza
-           * la experiencia AR.
-           *
-           * La cámara continúa funcionando.
+           * La experiencia AR continúa.
            */
 
           if (
@@ -1214,9 +1487,9 @@
       );
 
 
-    /* =========================================================
-       LIMPIEZA AL SALIR DE LA PÁGINA
-       ========================================================= */
+    /* ======================================================
+       SALIDA DE LA PÁGINA
+       ====================================================== */
 
     window.addEventListener(
       'pagehide',
@@ -1252,4 +1525,4 @@
   </script>
 
 </body>
-  </html>
+</html>
