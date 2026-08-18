@@ -31,8 +31,6 @@
       overflow: hidden;
     }
 
-    /* El fondo vive en su propia capa para que el filtro de brillo
-       no lave los colores del texto ni del botón */
     #fondo-inicio {
       position: absolute;
       inset: 0;
@@ -154,6 +152,7 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
     /* ---------- Spinner de carga ---------- */
@@ -234,7 +233,7 @@
 
   <div id="instrucciones">Apunta la cámara hacia la foto 📸</div>
 
-  <button id="btn-flash">🔦</button>
+  <button id="btn-flash" title="Linterna">🔦</button>
 
   <div id="loading-spinner"><div class="spinner"></div></div>
 
@@ -283,13 +282,7 @@
     let videoActual = null;
     let flashEncendido = false;
 
-    // Cambia este número para que coincida con la cantidad real de
-    // imágenes/fotos que compilaste dentro de targets.mind. Crear más
-    // entidades de las necesarias desperdicia recursos de tracking.
     const NUM_TARGETS = 10;
-
-    // Caché para no repetir el fetch HEAD cada vez que se reconoce
-    // el mismo marcador
     const cacheVideos = {};
 
     function mostrarSpinner() {
@@ -300,12 +293,19 @@
       loadingSpinner.style.display = 'none';
     }
 
+    function obtenerTrackCamara() {
+      const mindarSystem = sceneEl.systems['mindar-image-system'];
+      const videoMindAR = mindarSystem?.video || document.querySelector('video:not(#video-pantalla)');
+
+      if (videoMindAR && videoMindAR.srcObject) {
+        return videoMindAR.srcObject.getVideoTracks()[0] || null;
+      }
+      return null;
+    }
+
     async function buscarVideo(index) {
       const nombreArchivo = `Cita${String(index + 1).padStart(3, '0')}.mp4`;
-
-      // Enlace base de Cloudflare R2
       const rutaBase = "https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/";
-
       const rutaCompleta = rutaBase + nombreArchivo;
 
       try {
@@ -375,9 +375,6 @@
       targetsGroup.appendChild(el);
     }
 
-    // Muestra el video/oculta el spinner solo cuando ya está
-    // realmente reproduciendo, y vuelve a mostrarlo si se pone
-    // en buffer
     video.addEventListener('playing', () => {
       ocultarSpinner();
       container.style.display = 'block';
@@ -393,8 +390,6 @@
       container.style.display = 'none';
     });
 
-    // Envuelve cualquier promesa con un límite de tiempo, para que
-    // nada pueda dejar la app colgada indefinidamente
     function conTimeout(promise, ms) {
       const limite = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms)
@@ -406,10 +401,6 @@
       btnComenzar.disabled = true;
       btnComenzar.textContent = 'Iniciando cámara...';
 
-      // Desbloquear audio en iOS: reproducir (y pausar de inmediato)
-      // dentro del gesto del usuario. Sobre un <video> sin src esto
-      // a veces no resuelve ni rechaza en algunos navegadores, así
-      // que lo limitamos a 800ms y seguimos sin importar qué pase
       try {
         video.muted = false;
         await conTimeout(video.play(), 800);
@@ -421,15 +412,13 @@
 
       try {
         const mindarSystem = sceneEl.systems['mindar-image-system'];
-
-        // Salvavidas: si start() nunca resuelve ni rechaza (puede
-        // pasar si falta targets.mind o la página no está en HTTPS),
-        // no dejamos al usuario colgado en "Iniciando cámara..."
         await conTimeout(mindarSystem.start(), 15000);
 
         inicio.style.display = 'none';
-        btnFlash.style.display = 'flex';
         instrucciones.style.display = 'flex';
+
+        // Mostrar el botón de flash
+        btnFlash.style.display = 'flex';
       } catch (err) {
         console.error('Error al iniciar la cámara:', err);
         mensajeError.textContent = 'No pudimos acceder a la cámara. Revisa los permisos del navegador e inténtalo de nuevo.';
@@ -443,9 +432,9 @@
 
     btnReintentar.addEventListener('click', () => {
       overlayError.style.display = 'none';
+      iniciarExperiencia();
     });
 
-    // Función de cierre blindada
     function cerrarReproduccion(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       video.pause();
@@ -459,21 +448,29 @@
 
     btnFlash.addEventListener('click', async () => {
       try {
-        const videos = document.querySelectorAll('video');
-        let trackCamara = null;
-        videos.forEach(v => {
-          if (v.id !== 'video-pantalla' && v.srcObject) {
-            trackCamara = v.srcObject.getVideoTracks()[0];
-          }
+        const track = obtenerTrackCamara();
+
+        if (!track) {
+          console.warn('No se encontró el track de video de la cámara.');
+          return;
+        }
+
+        const capabilities = (typeof track.getCapabilities === 'function') ? track.getCapabilities() : null;
+
+        if (!capabilities || !capabilities.torch) {
+          console.warn('La cámara activa o el navegador no reporta soporte de linterna (torch).');
+          return;
+        }
+
+        flashEncendido = !flashEncendido;
+        await track.applyConstraints({
+          advanced: [{ torch: flashEncendido }]
         });
 
-        if (trackCamara && trackCamara.getCapabilities().torch) {
-          flashEncendido = !flashEncendido;
-          await trackCamara.applyConstraints({ advanced: [{ torch: flashEncendido }] });
-          btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0, 0, 0, 0.7)';
-        }
+        btnFlash.style.background = flashEncendido ? '#facc15' : 'rgba(0, 0, 0, 0.7)';
+        btnFlash.style.color = flashEncendido ? '#000' : '#fff';
       } catch (err) {
-        console.log('Error flash:', err);
+        console.error('Error al manipular la linterna:', err);
       }
     });
   </script>
