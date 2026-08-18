@@ -355,8 +355,6 @@
       } catch (error) {
         console.error('Error de conexión con R2:', error);
       }
-
-      console.error(`No se encontró ${nombreArchivo}`);
       return null;
     }
 
@@ -397,7 +395,6 @@
         try {
           await video.play();
         } catch (e) {
-          console.log('Reproducción bloqueada:', e);
           ocultarSpinner();
           container.style.display = 'block';
           btnTapPlay.style.display = 'flex';
@@ -430,7 +427,6 @@
     });
 
     video.addEventListener('error', () => {
-      console.error('Error al cargar el video:', video.error);
       ocultarSpinner();
       container.style.display = 'none';
     });
@@ -460,9 +456,7 @@
         await conTimeout(video.play(), 800);
         video.pause();
         video.currentTime = 0;
-      } catch (e) {
-        console.log('Desbloqueo de audio omitido:', e.message || e);
-      }
+      } catch (e) {}
 
       try {
         const mindarSystem = sceneEl.systems['mindar-image-system'];
@@ -473,7 +467,6 @@
         btnFinalizar.style.display = 'flex';
         instrucciones.style.display = 'flex';
       } catch (err) {
-        console.error('Error al iniciar la cámara:', err);
         mensajeError.textContent = 'No pudimos acceder a la cámara. Revisa los permisos del navegador e inténtalo de nuevo.';
         overlayError.style.display = 'flex';
         btnComenzar.disabled = false;
@@ -499,61 +492,8 @@
     btnCerrar.addEventListener('click', cerrarReproduccion);
     btnCerrar.addEventListener('touchend', cerrarReproduccion);
 
-    // NUEVA FUNCIÓN FINALIZAR MEJORADA
-    async function finalizarEscaneo() {
-      // 1. Apagar flash si está encendido
-      if (flashEncendido) {
-        try {
-          const videos = document.querySelectorAll('video');
-          let trackCamara = null;
-          videos.forEach(v => {
-            if (v.id !== 'video-pantalla' && v.srcObject) {
-              trackCamara = v.srcObject.getVideoTracks()[0];
-            }
-          });
-          if (trackCamara) {
-            await trackCamara.applyConstraints({ advanced: [{ torch: false }] });
-          }
-        } catch (e) {
-          console.log('Error al apagar el flash:', e);
-        }
-        flashEncendido = false;
-        btnFlash.style.background = 'rgba(0, 0, 0, 0.7)';
-      }
-
-      // 2. Detener el sistema MindAR
-      try {
-        const mindarSystem = sceneEl.systems['mindar-image-system'];
-        if (mindarSystem && typeof mindarSystem.stop === 'function') {
-          mindarSystem.stop();
-        }
-      } catch (e) {
-        console.log('Error al detener MindAR:', e);
-      }
-
-      // 3. Forzar el cierre de los tracks de la cámara (Evita que quede encendida en segundo plano)
-      try {
-        const videos = document.querySelectorAll('video');
-        videos.forEach(v => {
-          if (v.id !== 'video-pantalla' && v.srcObject) {
-            const tracks = v.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
-            v.srcObject = null;
-          }
-        });
-      } catch (e) {
-        console.log('Error al liberar hardware de la cámara:', e);
-      }
-
-      // 4. Detener cualquier video en curso
-      if (videoActual) {
-        video.pause();
-        video.currentTime = 0;
-        videoActual = null;
-      }
-      indiceActivo = null;
-
-      // 5. Ocultar todos los elementos de la interfaz de escaneo
+    // Botón Finalizar
+    btnFinalizar.addEventListener('click', () => {
       container.style.display = 'none';
       btnTapPlay.style.display = 'none';
       ocultarSpinner();
@@ -561,14 +501,14 @@
       btnFlash.style.display = 'none';
       btnFinalizar.style.display = 'none';
 
-      // 6. Restaurar la pantalla de inicio
-      btnComenzar.disabled = false;
-      btnComenzar.textContent = 'Comenzar Experiencia';
-      inicio.style.display = 'block';
-    }
+      if (videoActual) {
+        video.pause();
+      }
 
-    btnFinalizar.addEventListener('click', finalizarEscaneo);
+      window.location.reload();
+    });
 
+    // Botón Flash
     btnFlash.addEventListener('click', async () => {
       try {
         const videos = document.querySelectorAll('video');
