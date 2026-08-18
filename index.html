@@ -156,6 +156,48 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
+    /* ---------- Botón finalizar ---------- */
+    #btn-finalizar {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5001;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid #fff;
+      padding: 12px 26px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- Botón "toca para reproducir" ---------- */
+    #btn-tap-play {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5002;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      border: 1px solid #fff;
+      padding: 14px 28px;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
     /* ---------- Spinner de carga ---------- */
     #loading-spinner {
       position: fixed;
@@ -236,7 +278,11 @@
 
   <button id="btn-flash">🔦</button>
 
+  <button id="btn-finalizar">Finalizar</button>
+
   <div id="loading-spinner"><div class="spinner"></div></div>
+
+  <button id="btn-tap-play">▶ Toca para reproducir</button>
 
   <div id="video-container">
     <button id="btn-cerrar">&times;</button>
@@ -279,9 +325,12 @@
     const btnReintentar = document.getElementById('btn-reintentar');
     const instrucciones = document.getElementById('instrucciones');
     const loadingSpinner = document.getElementById('loading-spinner');
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    const btnTapPlay = document.getElementById('btn-tap-play');
 
     let videoActual = null;
     let flashEncendido = false;
+    let indiceActivo = null;
 
     // Cambia este número para que coincida con la cantidad real de
     // imágenes/fotos que compilaste dentro de targets.mind. Crear más
@@ -340,10 +389,16 @@
       el.setAttribute('mindar-image-target', `targetIndex: ${i}`);
 
       el.addEventListener('targetFound', async () => {
+        indiceActivo = i;
         instrucciones.style.display = 'none';
         mostrarSpinner();
 
         const rutaVideo = await obtenerVideoConCache(i);
+
+        // Si mientras esperábamos la respuesta el usuario ya cambió
+        // de marcador, este resultado quedó desactualizado: se ignora
+        if (indiceActivo !== i) return;
+
         if (!rutaVideo) {
           ocultarSpinner();
           return;
@@ -359,17 +414,25 @@
         try {
           await video.play();
         } catch (e) {
-          console.log('Error al reproducir:', e);
+          console.log('Reproducción automática bloqueada, se requiere un toque:', e);
           ocultarSpinner();
+          container.style.display = 'block';
+          btnTapPlay.style.display = 'flex';
         }
       });
 
       el.addEventListener('targetLost', () => {
+        // Ignorar si este marcador ya no es el activo (evita pausar
+        // el video de un marcador distinto que se acaba de encontrar)
+        if (indiceActivo !== i) return;
+        indiceActivo = null;
+
         if (videoActual) {
           video.pause();
           container.style.display = 'none';
         }
         ocultarSpinner();
+        btnTapPlay.style.display = 'none';
         instrucciones.style.display = 'flex';
       });
       targetsGroup.appendChild(el);
@@ -381,6 +444,7 @@
     video.addEventListener('playing', () => {
       ocultarSpinner();
       container.style.display = 'block';
+      btnTapPlay.style.display = 'none';
     });
 
     video.addEventListener('waiting', () => {
@@ -391,6 +455,15 @@
       console.error('Error al cargar el video:', video.error);
       ocultarSpinner();
       container.style.display = 'none';
+    });
+
+    btnTapPlay.addEventListener('click', async () => {
+      try {
+        await video.play();
+        btnTapPlay.style.display = 'none';
+      } catch (e) {
+        console.log('Sigue sin poder reproducir:', e);
+      }
     });
 
     // Envuelve cualquier promesa con un límite de tiempo, para que
@@ -429,6 +502,7 @@
 
         inicio.style.display = 'none';
         btnFlash.style.display = 'flex';
+        btnFinalizar.style.display = 'flex';
         instrucciones.style.display = 'flex';
       } catch (err) {
         console.error('Error al iniciar la cámara:', err);
@@ -452,10 +526,65 @@
       video.currentTime = 0;
       videoActual = null;
       container.style.display = 'none';
+      btnTapPlay.style.display = 'none';
     }
 
     btnCerrar.addEventListener('click', cerrarReproduccion);
     btnCerrar.addEventListener('touchend', cerrarReproduccion);
+
+    // Termina el escaneo por completo y regresa a la pantalla de inicio
+    async function finalizarEscaneo() {
+      // Apagar el flash si estaba encendido
+      if (flashEncendido) {
+        try {
+          const videos = document.querySelectorAll('video');
+          let trackCamara = null;
+          videos.forEach(v => {
+            if (v.id !== 'video-pantalla' && v.srcObject) {
+              trackCamara = v.srcObject.getVideoTracks()[0];
+            }
+          });
+          if (trackCamara) {
+            await trackCamara.applyConstraints({ advanced: [{ torch: false }] });
+          }
+        } catch (e) {
+          console.log('Error al apagar el flash:', e);
+        }
+        flashEncendido = false;
+        btnFlash.style.background = 'rgba(0, 0, 0, 0.7)';
+      }
+
+      // Detener el tracking y liberar la cámara
+      try {
+        const mindarSystem = sceneEl.systems['mindar-image-system'];
+        if (mindarSystem && typeof mindarSystem.stop === 'function') {
+          mindarSystem.stop();
+        }
+      } catch (e) {
+        console.log('Error al detener la cámara:', e);
+      }
+
+      // Detener cualquier video en curso
+      video.pause();
+      video.currentTime = 0;
+      videoActual = null;
+      indiceActivo = null;
+
+      // Ocultar todo lo del modo escaneo
+      container.style.display = 'none';
+      btnTapPlay.style.display = 'none';
+      ocultarSpinner();
+      instrucciones.style.display = 'none';
+      btnFlash.style.display = 'none';
+      btnFinalizar.style.display = 'none';
+
+      // Volver a la pantalla de inicio
+      btnComenzar.disabled = false;
+      btnComenzar.textContent = 'Comenzar Experiencia';
+      inicio.style.display = 'block';
+    }
+
+    btnFinalizar.addEventListener('click', finalizarEscaneo);
 
     btnFlash.addEventListener('click', async () => {
       try {
