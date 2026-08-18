@@ -31,6 +31,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* Pantalla de inicio */
+
     #inicio {
       position: fixed;
       inset: 0;
@@ -89,6 +91,8 @@
       transform: scale(0.97);
     }
 
+    /* UI de cámara */
+
     #instrucciones {
       position: fixed;
       top: 30px;
@@ -144,6 +148,8 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
+    /* Spinner */
+
     #loading-spinner {
       position: fixed;
       inset: 0;
@@ -168,6 +174,8 @@
         transform: rotate(360deg);
       }
     }
+
+    /* Video */
 
     #video-container {
       position: fixed;
@@ -204,6 +212,8 @@
 
 <body>
 
+  <!-- INICIO -->
+
   <div id="inicio">
     <div id="fondo-inicio"></div>
 
@@ -212,6 +222,8 @@
       <button id="btn-comenzar">Comenzar Experiencia</button>
     </div>
   </div>
+
+  <!-- CÁMARA -->
 
   <div id="instrucciones">
     Apunta la cámara hacia la foto 📸
@@ -224,6 +236,8 @@
     <div class="spinner"></div>
   </div>
 
+  <!-- ÚNICO VIDEO -->
+
   <div id="video-container">
     <button id="btn-cerrar">&times;</button>
 
@@ -234,6 +248,8 @@
       preload="auto">
     </video>
   </div>
+
+  <!-- MINDAR -->
 
   <a-scene
     mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
@@ -248,9 +264,11 @@
     </a-camera>
 
     <a-entity id="targets-group"></a-entity>
+
   </a-scene>
 
   <script>
+
     const inicio = document.getElementById('inicio');
     const container = document.getElementById('video-container');
     const video = document.getElementById('video-pantalla');
@@ -263,20 +281,28 @@
     const loadingSpinner = document.getElementById('loading-spinner');
 
     /*
-     * Actualmente hay 2 targets.
+     * ==========================================================
+     * CITAS
+     * ==========================================================
      *
-     * Target 0 → Cita001.mp4
-     * Target 1 → Cita002.mp4
+     * Actualmente están activos los dos targets que ya tenía:
      *
-     * Para agregar:
+     * target 0 → Cita001.mp4
+     * target 1 → Cita002.mp4
      *
-     * { target: 2 }
-     * { target: 3 }
+     * Para agregar las siguientes:
+     *
+     * { target: 2 } → Cita003.mp4
+     * { target: 3 } → Cita004.mp4
      *
      * ...
      *
-     * Target 99 → Cita100.mp4
+     * { target: 99 } → Cita100.mp4
+     *
+     * No se crean 100 elementos <video>.
+     * Toda la experiencia utiliza UN SOLO video.
      */
+
     const CITAS = [
       { target: 0 },
       { target: 1 }
@@ -288,23 +314,45 @@
       // { target: 99 }
     ];
 
-    const TOTAL_CITAS_MAXIMO = 100;
+    const TOTAL_CITAS = 100;
 
     const BASE_VIDEO =
       'https://pub-c5df9ff18811421c8626dccbae9df8f6.r2.dev/';
 
+
+    /* ==========================================================
+       ESTADO
+       ========================================================== */
+
     let experienciaActiva = false;
+
     let flashEncendido = false;
+
     let targetActivo = -1;
+
     let videoTargetActual = -1;
+
+    /*
+     * Evita que eventos de un video anterior
+     * interfieran con el actual.
+     */
     let generacionVideo = 0;
+
+    /*
+     * Evita dobles acciones de la X.
+     */
     let reiniciandoEscaneo = false;
 
     /*
-     * Solo guarda posiciones de citas que el usuario
-     * realmente haya reproducido.
+     * Guarda solamente las posiciones de las citas
+     * que realmente hayan sido reproducidas.
      */
     const posicionesVideo = {};
+
+
+    /* ==========================================================
+       SPINNER
+       ========================================================== */
 
     function mostrarSpinner() {
       loadingSpinner.style.display = 'flex';
@@ -314,7 +362,13 @@
       loadingSpinner.style.display = 'none';
     }
 
+
+    /* ==========================================================
+       TRACK DE CÁMARA
+       ========================================================== */
+
     function obtenerTrackCamara() {
+
       const mindarSystem =
         sceneEl.systems['mindar-image-system'];
 
@@ -332,63 +386,91 @@
       const tracks =
         stream.getVideoTracks();
 
-      return tracks && tracks.length
-        ? tracks[0]
-        : null;
-    }
-
-    btnFlash.addEventListener('click', async () => {
-      const track = obtenerTrackCamara();
-
-      if (!track) {
-        return;
+      if (!tracks || tracks.length === 0) {
+        return null;
       }
 
-      try {
-        const capabilities =
-          typeof track.getCapabilities === 'function'
-            ? track.getCapabilities()
-            : null;
+      return tracks[0];
+    }
 
-        if (!capabilities || !capabilities.torch) {
+
+    /* ==========================================================
+       LINTERNA
+       ========================================================== */
+
+    btnFlash.addEventListener(
+      'click',
+      async () => {
+
+        const track =
+          obtenerTrackCamara();
+
+        if (!track) {
           return;
         }
 
-        flashEncendido = !flashEncendido;
+        try {
 
-        await track.applyConstraints({
-          advanced: [
-            {
-              torch: flashEncendido
-            }
-          ]
-        });
-
-        btnFlash.style.background =
-          flashEncendido
-            ? '#facc15'
-            : 'rgba(0, 0, 0, 0.7)';
-
-      } catch (err) {
-        console.error('Error linterna:', err);
-      }
-    });
-
-    async function apagarLinterna() {
-      if (!flashEncendido) {
-        return;
-      }
-
-      const track = obtenerTrackCamara();
-
-      try {
-        if (track) {
           const capabilities =
             typeof track.getCapabilities === 'function'
               ? track.getCapabilities()
               : null;
 
-          if (capabilities && capabilities.torch) {
+          if (!capabilities || !capabilities.torch) {
+            return;
+          }
+
+          flashEncendido =
+            !flashEncendido;
+
+          await track.applyConstraints({
+            advanced: [
+              {
+                torch: flashEncendido
+              }
+            ]
+          });
+
+          btnFlash.style.background =
+            flashEncendido
+              ? '#facc15'
+              : 'rgba(0, 0, 0, 0.7)';
+
+        } catch (err) {
+
+          console.error(
+            'Error linterna:',
+            err
+          );
+
+        }
+      }
+    );
+
+
+    async function apagarLinterna() {
+
+      if (!flashEncendido) {
+        return;
+      }
+
+      const track =
+        obtenerTrackCamara();
+
+      try {
+
+        if (track) {
+
+          const capabilities =
+            typeof track.getCapabilities === 'function'
+              ? track.getCapabilities()
+              : null;
+
+          if (
+            capabilities &&
+            capabilities.torch
+          ) {
+
             await track.applyConstraints({
               advanced: [
                 {
@@ -396,13 +478,17 @@
                 }
               ]
             });
+
           }
         }
+
       } catch (err) {
+
         console.warn(
           'No se pudo apagar la linterna:',
           err
         );
+
       }
 
       flashEncendido = false;
@@ -411,17 +497,32 @@
         'rgba(0, 0, 0, 0.7)';
     }
 
+
+    /* ==========================================================
+       POSICIÓN DEL VIDEO
+       ========================================================== */
+
     function guardarPosicionActual() {
+
       if (
         videoTargetActual >= 0 &&
         isFinite(video.currentTime)
       ) {
-        posicionesVideo[videoTargetActual] =
-          video.currentTime;
+
+        posicionesVideo[
+          videoTargetActual
+        ] = video.currentTime;
+
       }
     }
 
+
+    /* ==========================================================
+       PAUSAR VIDEO
+       ========================================================== */
+
     function pausarVideo() {
+
       guardarPosicionActual();
 
       try {
@@ -429,29 +530,47 @@
       } catch (e) {}
 
       container.style.display = 'none';
+
       ocultarSpinner();
     }
 
-    function obtenerRutaVideo(targetIndex) {
-      const numero =
-        String(targetIndex + 1).padStart(3, '0');
 
-      return BASE_VIDEO +
-        `Cita${numero}.mp4`;
+    /* ==========================================================
+       RUTA DEL VIDEO
+       ========================================================== */
+
+    function obtenerRutaVideo(targetIndex) {
+
+      const numero =
+        String(targetIndex + 1)
+          .padStart(3, '0');
+
+      return (
+        BASE_VIDEO +
+        `Cita${numero}.mp4`
+      );
     }
 
+
+    /* ==========================================================
+       REPRODUCIR / REANUDAR CITA
+       ========================================================== */
+
     async function reproducirCita(targetIndex) {
+
       const rutaVideo =
         obtenerRutaVideo(targetIndex);
 
+
       /*
-       * Si sigue siendo la misma cita,
-       * simplemente continúa.
+       * Si es la misma cita que ya estaba cargada,
+       * no volvemos a descargarla.
        */
       if (
         videoTargetActual === targetIndex &&
         video.src === rutaVideo
       ) {
+
         try {
           await video.play();
         } catch (e) {}
@@ -459,58 +578,104 @@
         return;
       }
 
+
+      /*
+       * Guardar la posición de la cita anterior.
+       */
       guardarPosicionActual();
+
 
       try {
         video.pause();
       } catch (e) {}
 
-      videoTargetActual = targetIndex;
-      video.src = rutaVideo;
+
+      videoTargetActual =
+        targetIndex;
+
+
+      /*
+       * Cargar solamente este video.
+       */
+      video.src =
+        rutaVideo;
+
 
       const posicion =
         posicionesVideo[targetIndex];
 
+
+      /*
+       * Si ya habíamos visto esta cita,
+       * recuperar su posición.
+       */
       if (
         typeof posicion === 'number' &&
         isFinite(posicion)
       ) {
+
         if (video.readyState >= 1) {
+
           try {
-            video.currentTime = posicion;
+            video.currentTime =
+              posicion;
           } catch (e) {}
+
         } else {
+
           await new Promise(resolve => {
+
             video.addEventListener(
               'loadedmetadata',
               () => {
+
                 try {
-                  video.currentTime = posicion;
+                  video.currentTime =
+                    posicion;
                 } catch (e) {}
 
                 resolve();
+
               },
-              { once: true }
+              {
+                once: true
+              }
             );
+
           });
+
         }
+
       } else {
+
         try {
           video.currentTime = 0;
         } catch (e) {}
+
       }
 
+
       try {
+
         await video.play();
+
       } catch (err) {
+
         console.warn(
           'No se pudo reproducir el video:',
           err
         );
+
       }
     }
 
-    function reiniciarVideoCompleto() {
+
+    /* ==========================================================
+       LIMPIAR VIDEO
+       ========================================================== */
+
+    function limpiarVideo() {
+
       try {
         video.pause();
       } catch (e) {}
@@ -522,20 +687,41 @@
       } catch (e) {}
 
       videoTargetActual = -1;
-      container.style.display = 'none';
+
+      container.style.display =
+        'none';
 
       ocultarSpinner();
     }
 
-    /*
-     * X:
-     * - guarda la posición;
-     * - detiene el video;
-     * - limpia el reproductor;
-     * - reinicia el escaneo;
-     * - conserva la posición para poder continuar después.
-     */
+
+    /* ==========================================================
+       X — RESET DEL VIDEO / ESCANEO
+       ==========================================================
+       
+       IMPORTANTE:
+       
+       NO detenemos MindAR.
+       NO hacemos stop().
+       NO hacemos start().
+       
+       La cámara continúa funcionando.
+       
+       La X:
+       - guarda posición;
+       - pausa;
+       - limpia el reproductor;
+       - muestra nuevamente la instrucción;
+       - espera un nuevo reconocimiento.
+       
+       Para volver a escanear la MISMA imagen,
+       simplemente hay que retirarla de la cámara
+       y volverla a colocar.
+       
+       ========================================================== */
+
     async function resetearEscaneo() {
+
       if (
         !experienciaActiva ||
         reiniciandoEscaneo
@@ -544,46 +730,44 @@
       }
 
       reiniciandoEscaneo = true;
+
       generacionVideo++;
 
+
+      /*
+       * Guardar la posición antes de limpiar.
+       */
       guardarPosicionActual();
-      reiniciarVideoCompleto();
 
+
+      /*
+       * Ocultar/limpiar únicamente el video.
+       * La cámara de MindAR NO se toca.
+       */
+      limpiarVideo();
+
+
+      /*
+       * El target deja de considerarse activo
+       * dentro de nuestra aplicación.
+       */
       targetActivo = -1;
-      instrucciones.style.display = 'flex';
 
-      try {
-        const mindarSystem =
-          sceneEl.systems['mindar-image-system'];
 
-        if (
-          mindarSystem &&
-          typeof mindarSystem.stop === 'function'
-        ) {
-          mindarSystem.stop();
-        }
+      /*
+       * Volver a mostrar la instrucción.
+       */
+      instrucciones.style.display =
+        'flex';
 
-        await new Promise(resolve =>
-          setTimeout(resolve, 150)
-        );
-
-        if (
-          experienciaActiva &&
-          mindarSystem &&
-          typeof mindarSystem.start === 'function'
-        ) {
-          await mindarSystem.start();
-        }
-
-      } catch (err) {
-        console.warn(
-          'No se pudo reiniciar el escaneo:',
-          err
-        );
-      }
 
       reiniciandoEscaneo = false;
     }
+
+
+    /* ==========================================================
+       BOTÓN X
+       ========================================================== */
 
     document
       .getElementById('btn-cerrar')
@@ -592,30 +776,48 @@
         resetearEscaneo
       );
 
+
+    /* ==========================================================
+       CREAR TARGETS
+       ========================================================== */
+
     CITAS.forEach(cita => {
+
       if (
         typeof cita.target !== 'number' ||
         cita.target < 0 ||
-        cita.target >= TOTAL_CITAS_MAXIMO
+        cita.target >= TOTAL_CITAS
       ) {
+
         console.warn(
           'Target inválido:',
           cita.target
         );
+
         return;
       }
 
+
       const el =
-        document.createElement('a-entity');
+        document.createElement(
+          'a-entity'
+        );
+
 
       el.setAttribute(
         'mindar-image-target',
         `targetIndex: ${cita.target}`
       );
 
+
+      /* ========================================================
+         TARGET ENCONTRADO
+         ======================================================== */
+
       el.addEventListener(
         'targetFound',
         async () => {
+
           if (
             !experienciaActiva ||
             reiniciandoEscaneo
@@ -623,199 +825,376 @@
             return;
           }
 
-          targetActivo = cita.target;
+
+          targetActivo =
+            cita.target;
+
 
           const generacionActual =
             ++generacionVideo;
 
-          instrucciones.style.display = 'none';
+
+          instrucciones.style.display =
+            'none';
+
+
           mostrarSpinner();
 
-          await reproducirCita(cita.target);
 
+          await reproducirCita(
+            cita.target
+          );
+
+
+          /*
+           * Si mientras cargaba cambió el estado,
+           * no hacemos nada más.
+           */
           if (
             !experienciaActiva ||
             generacionActual !== generacionVideo ||
             targetActivo !== cita.target
           ) {
+
             return;
           }
+
         }
       );
+
+
+      /* ========================================================
+         TARGET PERDIDO
+         ======================================================== */
 
       el.addEventListener(
         'targetLost',
         () => {
+
+          /*
+           * Solo reaccionamos si era
+           * el target que estábamos reproduciendo.
+           */
           if (
             targetActivo !== cita.target
           ) {
             return;
           }
 
+
           targetActivo = -1;
+
           generacionVideo++;
 
+
           /*
-           * Al perder la imagen:
-           * pausa, pero NO reinicia la posición.
+           * PAUSA.
+           *
+           * No borramos la posición.
            */
           pausarVideo();
 
+
           if (experienciaActiva) {
-            instrucciones.style.display = 'flex';
+
+            instrucciones.style.display =
+              'flex';
+
           }
+
         }
       );
 
+
       targetsGroup.appendChild(el);
+
     });
+
+
+    /* ==========================================================
+       VIDEO REPRODUCIÉNDOSE
+       ========================================================== */
 
     video.addEventListener(
       'playing',
       () => {
+
         if (!experienciaActiva) {
           return;
         }
 
         ocultarSpinner();
-        container.style.display = 'block';
+
+        container.style.display =
+          'block';
+
       }
     );
+
+
+    /* ==========================================================
+       GUARDAR POSICIÓN
+       ========================================================== */
 
     video.addEventListener(
       'timeupdate',
       guardarPosicionActual
     );
 
+
+    /* ==========================================================
+       ERROR DE VIDEO
+       ========================================================== */
+
     video.addEventListener(
       'error',
       () => {
+
         ocultarSpinner();
 
         console.error(
           'Error cargando video:',
           video.error
         );
+
       }
     );
+
+
+    /* ==========================================================
+       COMENZAR EXPERIENCIA
+       ========================================================== */
 
     btnComenzar.addEventListener(
       'click',
       async () => {
+
         if (experienciaActiva) {
           return;
         }
 
-        btnComenzar.disabled = true;
+
+        btnComenzar.disabled =
+          true;
+
 
         try {
+
           const mindarSystem =
             sceneEl.systems[
               'mindar-image-system'
             ];
 
+
           if (!mindarSystem) {
+
             throw new Error(
               'No se encontró el sistema de MindAR.'
             );
+
           }
 
-          experienciaActiva = true;
-          targetActivo = -1;
-          videoTargetActual = -1;
+
+          experienciaActiva =
+            true;
+
+
+          targetActivo =
+            -1;
+
+
+          videoTargetActual =
+            -1;
+
+
           generacionVideo++;
+
 
           await mindarSystem.start();
 
-          inicio.style.display = 'none';
-          btnFlash.style.display = 'flex';
-          btnFinalizar.style.display = 'block';
-          instrucciones.style.display = 'flex';
+
+          inicio.style.display =
+            'none';
+
+
+          btnFlash.style.display =
+            'flex';
+
+
+          btnFinalizar.style.display =
+            'block';
+
+
+          instrucciones.style.display =
+            'flex';
 
         } catch (e) {
-          experienciaActiva = false;
+
+          experienciaActiva =
+            false;
+
 
           console.error(
             'Error al iniciar cámara:',
             e
           );
 
+
           alert(
             'Error al iniciar cámara: ' +
             (e.message || e)
           );
 
-          btnComenzar.disabled = false;
+
+          btnComenzar.disabled =
+            false;
+
         }
+
       }
     );
+
+
+    /* ==========================================================
+       FINALIZAR
+       ========================================================== */
 
     btnFinalizar.addEventListener(
       'click',
       async () => {
-        experienciaActiva = false;
-        reiniciandoEscaneo = false;
-        targetActivo = -1;
+
+        /*
+         * Desactivar nuestra aplicación primero.
+         */
+        experienciaActiva =
+          false;
+
+
+        reiniciandoEscaneo =
+          false;
+
+
+        targetActivo =
+          -1;
+
 
         generacionVideo++;
 
-        reiniciarVideoCompleto();
 
-        Object.keys(posicionesVideo)
-          .forEach(key => {
-            delete posicionesVideo[key];
-          });
+        /*
+         * Limpiar video.
+         */
+        limpiarVideo();
 
+
+        /*
+         * Finalizar sí borra las posiciones.
+         * X NO las borra.
+         */
+        Object.keys(
+          posicionesVideo
+        ).forEach(key => {
+          delete posicionesVideo[key];
+        });
+
+
+        /*
+         * Apagar linterna.
+         */
         await apagarLinterna();
 
-        btnFlash.style.display = 'none';
-        btnFinalizar.style.display = 'none';
-        instrucciones.style.display = 'none';
 
-        inicio.style.display = 'flex';
-        btnComenzar.disabled = false;
+        /*
+         * Ocultar controles.
+         */
+        btnFlash.style.display =
+          'none';
 
+        btnFinalizar.style.display =
+          'none';
+
+        instrucciones.style.display =
+          'none';
+
+
+        /*
+         * Volver a pantalla inicial.
+         */
+        inicio.style.display =
+          'flex';
+
+
+        btnComenzar.disabled =
+          false;
+
+
+        /*
+         * Ahora sí detenemos MindAR,
+         * porque FINALIZAR significa terminar
+         * completamente la experiencia.
+         */
         try {
+
           const mindarSystem =
             sceneEl.systems[
               'mindar-image-system'
             ];
 
+
           if (
             mindarSystem &&
             typeof mindarSystem.stop === 'function'
           ) {
+
             mindarSystem.stop();
+
           }
+
         } catch (err) {
+
           console.warn(
             'No se pudo detener MindAR:',
             err
           );
+
         }
+
       }
     );
+
+
+    /* ==========================================================
+       SALIR DE LA PÁGINA
+       ========================================================== */
 
     window.addEventListener(
       'pagehide',
       async () => {
+
         try {
           await apagarLinterna();
         } catch (e) {}
 
+
         try {
+
           const mindarSystem =
             sceneEl.systems[
               'mindar-image-system'
             ];
 
+
           if (
             mindarSystem &&
             typeof mindarSystem.stop === 'function'
           ) {
+
             mindarSystem.stop();
+
           }
+
         } catch (e) {}
+
       }
     );
 
